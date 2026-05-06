@@ -1,8 +1,15 @@
-import { useState, useEffect } from "react";
-import { getCurrentUser } from "./auth";
+import { useEffect, useState } from "react";
 
 // Types
-export type OrderStatus = "pending" | "accepted" | "preparing" | "ready" | "collected" | "completed" | "cancelled" | "delivered";
+export type OrderStatus =
+  | "pending"
+  | "accepted"
+  | "preparing"
+  | "ready"
+  | "collected"
+  | "completed"
+  | "cancelled"
+  | "delivered";
 export type ItemCategory = "Veg" | "Non-Veg" | "Beverages" | "Desserts" | "Snacks";
 export type ItemType = "Breakfast" | "Lunch" | "Dinner" | "Snacks" | "Beverages" | "Meal" | "Dessert" | "Other";
 export type Day = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
@@ -18,6 +25,11 @@ export interface MenuItem {
   image?: string;
   rating?: number;
   reviews?: number;
+  quantity?: number;
+  slot?: string;
+  days?: Day[];
+  tag?: string;
+  live?: boolean;
 }
 
 export interface Slot {
@@ -28,13 +40,27 @@ export interface Slot {
   status: "active" | "upcoming" | "expired";
   date: string;
   maxOrders?: number;
+  displayTime?: string;
+  type?: ItemType;
+  defaultCategory?: ItemCategory;
+  active?: boolean;
+  capacity?: number;
+  currentOccupancy?: number;
+  label?: string;
+  menuItemIds?: string[];
+  disabledItemIds?: string[];
 }
 
 export interface OrderItem {
+  id?: string;
+  orderId?: string;
   menuItemId: string;
   quantity: number;
-  price: number;
+  price?: number;
+  unitPrice?: number;
+  totalPrice?: number;
   slotId?: string;
+  name?: string;
 }
 
 export interface Order {
@@ -42,12 +68,19 @@ export interface Order {
   customerId: string;
   items: OrderItem[];
   status: OrderStatus;
-  totalAmount: number;
   createdAt: string;
   updatedAt: string;
   slotId?: string;
   slotName?: string;
   notes?: string;
+  orderNumber?: string;
+  customerName?: string;
+  department?: string;
+  subtotal?: number;
+  tax?: number;
+  total?: number;
+  totalAmount?: number;
+  paymentMethod?: string;
 }
 
 export interface Customer {
@@ -58,6 +91,7 @@ export interface Customer {
   phone: string;
   walletBalance: number;
   createdAt: string;
+  empId?: string;
 }
 
 export interface WalletTransaction {
@@ -76,245 +110,271 @@ export interface Announcement {
   createdAt: string;
   expiresAt?: string;
   priority?: "low" | "medium" | "high";
+  active?: boolean;
+  date?: string;
+  fromTime?: string;
+  toTime?: string;
+  specialDish?: string;
 }
 
-// Constants
 export const ALL_DAYS: Day[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-// Mock data
-const mockMenuItems: MenuItem[] = [
-  { id: "1", name: "Idli", description: "South Indian steamed cake", price: 30, category: "Veg", type: "Breakfast", available: true },
-  { id: "2", name: "Dosa", description: "Crispy rice pancake", price: 50, category: "Veg", type: "Breakfast", available: true },
-  { id: "3", name: "Biryani", description: "Fragrant rice dish", price: 120, category: "Non-Veg", type: "Lunch", available: true },
-  { id: "4", name: "Paneer Tikka", description: "Grilled cottage cheese", price: 100, category: "Veg", type: "Dinner", available: true },
-];
-
-const mockSlots: Slot[] = [
-  { id: "breakfast", name: "Breakfast", startTime: "08:00", endTime: "10:00", status: "active", date: new Date().toISOString().split("T")[0] },
-  { id: "lunch", name: "Lunch", startTime: "12:00", endTime: "14:00", status: "upcoming", date: new Date().toISOString().split("T")[0] },
-  { id: "dinner", name: "Dinner", startTime: "18:00", endTime: "20:00", status: "upcoming", date: new Date().toISOString().split("T")[0] },
-];
-
-const mockCustomers: Customer[] = [
-  { id: "cust-1", name: "Raj Kumar", department: "IT", email: "raj@company.com", phone: "9876543210", walletBalance: 1000, createdAt: new Date().toISOString() },
-];
-
-const mockOrders: Order[] = [];
-const mockAnnouncements: Announcement[] = [];
-const mockWalletTransactions: WalletTransaction[] = [];
-
-// Simple store implementation without external dependencies
 interface StoreState {
   menuItems: MenuItem[];
+  customCategories: string[];
   slots: Slot[];
   customers: Customer[];
   orders: Order[];
+  orderItems: OrderItem[];
   announcements: Announcement[];
   walletTransactions: WalletTransaction[];
   cart: { items: OrderItem[] };
   currentCustomerId: string | null;
 }
 
-// Global store state
-let storeState: StoreState = {
-  menuItems: mockMenuItems,
-  slots: mockSlots,
-  customers: mockCustomers,
-  orders: mockOrders,
-  announcements: mockAnnouncements,
-  walletTransactions: mockWalletTransactions,
-  cart: { items: [] },
-  currentCustomerId: mockCustomers[0]?.id || null,
+const STORAGE_KEY = "canteen-store-v2";
+const RESET_SLOTS_FLAG_KEY = "canteen-slots-reset-v1";
+
+const defaultState = (): StoreState => {
+  const now = new Date().toISOString();
+  return {
+    menuItems: [
+      {
+        id: "menu-1",
+        name: "Idli",
+        description: "South Indian steamed cake",
+        price: 30,
+        category: "Veg",
+        type: "Breakfast",
+        available: true,
+        quantity: 100,
+        slot: "Breakfast",
+        days: [...ALL_DAYS],
+        live: true,
+      },
+      {
+        id: "menu-2",
+        name: "Dosa",
+        description: "Crispy rice pancake",
+        price: 50,
+        category: "Veg",
+        type: "Breakfast",
+        available: true,
+        quantity: 100,
+        slot: "Breakfast",
+        days: [...ALL_DAYS],
+        live: true,
+      },
+    ],
+    customCategories: [],
+    // Start with empty slots so admin can create custom slots
+    slots: [],
+    customers: [
+      {
+        id: "cust-1",
+        empId: "EMP-1234",
+        name: "John Employee",
+        department: "employee",
+        email: "john@company.com",
+        phone: "9876543210",
+        walletBalance: 1000,
+        createdAt: now,
+      },
+    ],
+    orders: [],
+    orderItems: [],
+    announcements: [],
+    walletTransactions: [],
+    cart: { items: [] },
+    currentCustomerId: "cust-1",
+  };
 };
 
-// Subscribers for reactive updates
+function normalizeState(input: Partial<StoreState> | null | undefined): StoreState {
+  const base = defaultState();
+  const raw = input ?? {};
+  const normalizedCartItems = raw.cart?.items
+    ?.map((item) => ({
+      ...item,
+      quantity: Number.isFinite(Number(item?.quantity)) ? Math.max(1, Number(item.quantity)) : 1,
+      price: Number.isFinite(Number(item?.price)) ? Number(item.price) : 0,
+    }))
+    .filter((item) => item.menuItemId) ?? [];
+  return {
+    menuItems: Array.isArray(raw.menuItems) ? raw.menuItems : base.menuItems,
+    customCategories: Array.isArray(raw.customCategories) ? raw.customCategories : [],
+    slots: Array.isArray(raw.slots) ? raw.slots : [],
+    customers: Array.isArray(raw.customers) ? raw.customers : base.customers,
+    orders: Array.isArray(raw.orders) ? raw.orders : [],
+    orderItems: Array.isArray(raw.orderItems) ? raw.orderItems : [],
+    announcements: Array.isArray(raw.announcements) ? raw.announcements : [],
+    walletTransactions: Array.isArray(raw.walletTransactions) ? raw.walletTransactions : [],
+    cart: { items: normalizedCartItems },
+    currentCustomerId: raw.currentCustomerId ?? base.currentCustomerId,
+  };
+}
+
+function loadInitialState(): StoreState {
+  if (typeof window === "undefined") return defaultState();
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const hasReset = window.localStorage.getItem(RESET_SLOTS_FLAG_KEY) === "1";
+    if (!raw) {
+      const fresh = defaultState();
+      window.localStorage.setItem(RESET_SLOTS_FLAG_KEY, "1");
+      return fresh;
+    }
+    const parsed = normalizeState(JSON.parse(raw));
+    if (!hasReset) {
+      parsed.slots = [];
+      window.localStorage.setItem(RESET_SLOTS_FLAG_KEY, "1");
+    }
+    return parsed;
+  } catch {
+    return defaultState();
+  }
+}
+
+let storeState: StoreState = loadInitialState();
 const subscribers = new Set<() => void>();
 
+const persistState = () => {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(storeState));
+};
+
 const notifySubscribers = () => {
+  persistState();
   subscribers.forEach((callback) => callback());
 };
 
-// Custom hooks
-export const useStore = (selector?: (state: StoreState) => any) => {
-  const [, setState] = useState(0);
+let storageListenerBound = false;
+function ensureStorageSync() {
+  if (storageListenerBound || typeof window === "undefined") return;
+  storageListenerBound = true;
+  window.addEventListener("storage", (event) => {
+    if (event.key !== STORAGE_KEY || !event.newValue) return;
+    try {
+      storeState = normalizeState(JSON.parse(event.newValue));
+      subscribers.forEach((callback) => callback());
+    } catch {
+      // ignore malformed storage event payload
+    }
+  });
+}
 
+export const useStore = <T = StoreState>(selector?: (state: StoreState) => T): T | StoreState => {
+  const [, setTick] = useState(0);
   useEffect(() => {
-    const unsubscribe = () => {
-      setState((prev: number) => prev + 1);
-    };
-    subscribers.add(unsubscribe);
-    return () => {
-      subscribers.delete(unsubscribe);
-    };
+    ensureStorageSync();
+    const callback = () => setTick((n) => n + 1);
+    subscribers.add(callback);
+    return () => subscribers.delete(callback);
   }, []);
-
-  if (selector) {
-    return selector(storeState);
-  }
-  return storeState;
+  return selector ? selector(storeState) : storeState;
 };
 
 export const useCart = () => {
-  const [, setState] = useState(0);
-
-  useEffect(() => {
-    const unsubscribe = () => {
-      setState((prev: number) => prev + 1);
-    };
-    subscribers.add(unsubscribe);
-    return () => {
-      subscribers.delete(unsubscribe);
-    };
-  }, []);
-
-  return storeState.cart;
+  const value = useStore((state) => state.cart) as { items: OrderItem[] };
+  return value;
 };
 
+const ENTITY_KEY_MAP: Record<string, keyof StoreState> = {
+  menuItem: "menuItems",
+  menuItems: "menuItems",
+  slot: "slots",
+  slots: "slots",
+  customer: "customers",
+  customers: "customers",
+  order: "orders",
+  orders: "orders",
+  orderItem: "orderItems",
+  orderItems: "orderItems",
+  announcement: "announcements",
+  announcements: "announcements",
+  walletTransaction: "walletTransactions",
+  walletTransactions: "walletTransactions",
+};
+
+function resolveEntityKey(type: string): keyof StoreState {
+  return ENTITY_KEY_MAP[type] ?? (`${type}s` as keyof StoreState);
+}
+
 export const useEntities = <T,>(type: string): T[] => {
-  const [, setState] = useState(0);
-
-  useEffect(() => {
-    const unsubscribe = () => {
-      setState((prev: number) => prev + 1);
-    };
-    subscribers.add(unsubscribe);
-    return () => {
-      subscribers.delete(unsubscribe);
-    };
-  }, []);
-
-  const key = `${type}s` as keyof StoreState;
-  return (storeState[key] as T[]) || [];
+  const key = resolveEntityKey(type);
+  const list = useStore((state) => (state[key] as T[]) ?? []) as T[];
+  return list;
 };
 
 export const useCurrentCustomer = (): Customer | null => {
-  const [, setState] = useState(0);
-
-  useEffect(() => {
-    const unsubscribe = () => {
-      setState((prev: number) => prev + 1);
-    };
-    subscribers.add(unsubscribe);
-    return () => {
-      subscribers.delete(unsubscribe);
-    };
-  }, []);
-
-  const { currentCustomerId, customers } = storeState;
-  return currentCustomerId ? customers.find((c) => c.id === currentCustomerId) || null : null;
+  const { currentCustomerId, customers } = useStore((state) => ({
+    currentCustomerId: state.currentCustomerId,
+    customers: state.customers,
+  })) as { currentCustomerId: string | null; customers: Customer[] };
+  return currentCustomerId ? customers.find((entry) => entry.id === currentCustomerId) ?? null : null;
 };
 
-// Store action functions - exported with correct names
-const createEntityInternal = <T extends MenuItem | Slot | Customer | Order | Announcement | WalletTransaction>(
-  type: string,
-  entity: T
-) => {
-  const key = `${type}s` as keyof StoreState;
-  const items = storeState[key] as any[];
-  storeState[key] = [...items, entity] as any;
+function ensureOrderDefaults(order: Order): Order {
+  const total = Number(order.total ?? order.totalAmount ?? 0);
+  const normalizedOrderNumber = order.orderNumber ?? `ORD-${Date.now().toString().slice(-5)}`;
+  return {
+    ...order,
+    orderNumber: normalizedOrderNumber,
+    total,
+    totalAmount: total,
+    createdAt: order.createdAt ?? new Date().toISOString(),
+    updatedAt: order.updatedAt ?? new Date().toISOString(),
+    items: Array.isArray(order.items) ? order.items : [],
+  };
+}
+
+function createEntityInternal<T extends object>(type: string, entity: Partial<T> & { id?: string }): T {
+  const key = resolveEntityKey(type);
+  const created = {
+    id: entity.id ?? `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    createdAt: (entity as any).createdAt ?? new Date().toISOString(),
+    updatedAt: (entity as any).updatedAt ?? new Date().toISOString(),
+    ...entity,
+  } as T;
+
+  const normalized = key === "orders" ? (ensureOrderDefaults(created as unknown as Order) as unknown as T) : created;
+  const items = (storeState[key] as T[]) ?? [];
+  storeState = { ...storeState, [key]: [...items, normalized] };
   notifySubscribers();
-};
+  return normalized;
+}
 
-const updateEntityInternal = <T extends MenuItem | Slot | Customer | Order | Announcement | WalletTransaction>(
-  type: string,
-  id: string,
-  updates: Partial<T>
-) => {
-  const key = `${type}s` as keyof StoreState;
-  const items = storeState[key] as any[];
-  storeState[key] = items.map((item) =>
-    item.id === id ? { ...item, ...updates } : item
-  ) as any;
-  notifySubscribers();
-};
+function updateEntityInternal<T extends object>(type: string, id: string, updates: Partial<T>): T | null {
+  const key = resolveEntityKey(type);
+  const items = (storeState[key] as T[]) ?? [];
+  let updatedEntity: T | null = null;
 
-const deleteEntityInternal = (type: string, id: string) => {
-  const key = `${type}s` as keyof StoreState;
-  const items = storeState[key] as any[];
-  storeState[key] = items.filter((item) => item.id !== id) as any;
-  notifySubscribers();
-};
-
-const addToCartInternal = (item: OrderItem) => {
-  const existingItem = storeState.cart.items.find(
-    (i) => i.menuItemId === item.menuItemId && i.slotId === item.slotId
-  );
-  if (existingItem) {
-    existingItem.quantity += item.quantity;
-  } else {
-    storeState.cart.items.push(item);
-  }
-  notifySubscribers();
-};
-
-const removeFromCartInternal = (menuItemId: string, slotId?: string) => {
-  storeState.cart.items = storeState.cart.items.filter(
-    (item) => !(item.menuItemId === menuItemId && item.slotId === slotId)
-  );
-  notifySubscribers();
-};
-
-const updateCartQuantityInternal = (menuItemId: string, quantity: number, slotId?: string) => {
-  const item = storeState.cart.items.find(
-    (i) => i.menuItemId === menuItemId && i.slotId === slotId
-  );
-  if (item) {
-    item.quantity = Math.max(0, quantity);
-  }
-  notifySubscribers();
-};
-
-const addToWalletInternal = (customerId: string, amount: number, reason: string) => {
-  const customer = storeState.customers.find((c) => c.id === customerId);
-  if (customer) {
-    customer.walletBalance += amount;
-  }
-  storeState.walletTransactions.push({
-    id: `txn-${Date.now()}`,
-    customerId,
-    amount,
-    type: "credit",
-    reason,
-    createdAt: new Date().toISOString(),
+  const updatedItems = items.map((item: any) => {
+    if (item.id !== id) return item;
+    updatedEntity = { ...item, ...updates, updatedAt: new Date().toISOString() } as T;
+    if (key === "orders") {
+      updatedEntity = ensureOrderDefaults(updatedEntity as unknown as Order) as unknown as T;
+    }
+    return updatedEntity;
   });
+
+  storeState = { ...storeState, [key]: updatedItems };
   notifySubscribers();
-};
+  return updatedEntity;
+}
 
-const deductFromWalletInternal = (customerId: string, amount: number, reason: string) => {
-  const customer = storeState.customers.find((c) => c.id === customerId);
-  if (customer && customer.walletBalance >= amount) {
-    customer.walletBalance -= amount;
-  }
-  storeState.walletTransactions.push({
-    id: `txn-${Date.now()}`,
-    customerId,
-    amount,
-    type: "debit",
-    reason,
-    createdAt: new Date().toISOString(),
-  });
+function deleteEntityInternal(type: string, id: string) {
+  const key = resolveEntityKey(type);
+  const items = (storeState[key] as any[]) ?? [];
+  storeState = { ...storeState, [key]: items.filter((item) => item.id !== id) };
   notifySubscribers();
-};
+}
 
-const updateOrderStatusInternal = (orderId: string, status: OrderStatus) => {
-  updateEntityInternal("order", orderId, { status, updatedAt: new Date().toISOString() } as any);
-};
-
-// Utility functions
-export const formatINR = (amount: number): string => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 0,
-  }).format(amount);
-};
+export const formatINR = (amount: number): string =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 0 }).format(amount || 0);
 
 export const downloadCSV = (data: any[], filename: string): void => {
-  if (data.length === 0) {
-    console.warn("No data to download");
-    return;
-  }
-
+  if (!Array.isArray(data) || data.length === 0 || typeof window === "undefined") return;
   const headers = Object.keys(data[0]);
   const csvContent = [
     headers.join(","),
@@ -322,13 +382,12 @@ export const downloadCSV = (data: any[], filename: string): void => {
       headers
         .map((header) => {
           const value = row[header];
-          const escaped = typeof value === "string" && value.includes(",") ? `"${value}"` : value;
-          return escaped;
+          const asText = value == null ? "" : String(value);
+          return asText.includes(",") ? `"${asText}"` : asText;
         })
-        .join(",")
+        .join(","),
     ),
   ].join("\n");
-
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -338,74 +397,108 @@ export const downloadCSV = (data: any[], filename: string): void => {
   URL.revokeObjectURL(url);
 };
 
-// Entity-specific functions
-export const createMenuItem = (menuItem: MenuItem) => {
-  createEntityInternal("menuItem", menuItem);
-};
+export const createMenuItem = (menuItem: Partial<MenuItem>) =>
+  createEntityInternal<MenuItem>("menuItem", {
+    available: true,
+    live: true,
+    days: [...ALL_DAYS],
+    ...menuItem,
+  });
 
-export const updateMenuItem = (id: string, updates: Partial<MenuItem>) => {
-  updateEntityInternal("menuItem", id, updates);
-};
+export const updateMenuItem = (id: string, updates: Partial<MenuItem>) => updateEntityInternal<MenuItem>("menuItem", id, updates);
+export const deleteMenuItem = (id: string) => deleteEntityInternal("menuItem", id);
 
-export const deleteMenuItem = (id: string) => {
-  deleteEntityInternal("menuItem", id);
-};
-
-export const createAnnouncement = (announcement: Announcement) => {
-  createEntityInternal("announcement", announcement);
-};
-
-export const updateAnnouncement = (id: string, updates: Partial<Announcement>) => {
-  updateEntityInternal("announcement", id, updates);
-};
-
-export const deleteAnnouncement = (id: string) => {
-  deleteEntityInternal("announcement", id);
-};
+export const createAnnouncement = (announcement: Partial<Announcement>) => createEntityInternal<Announcement>("announcement", announcement);
+export const updateAnnouncement = (id: string, updates: Partial<Announcement>) =>
+  updateEntityInternal<Announcement>("announcement", id, updates);
+export const deleteAnnouncement = (id: string) => deleteEntityInternal("announcement", id);
 
 export const addToWallet = (customerId: string, amount: number, reason: string = "Add funds") => {
-  addToWalletInternal(customerId, amount, reason);
+  if (amount <= 0) return false;
+  const customer = storeState.customers.find((entry) => entry.id === customerId);
+  if (!customer) return false;
+  customer.walletBalance += amount;
+  createEntityInternal<WalletTransaction>("walletTransaction", {
+    customerId,
+    amount,
+    type: "credit",
+    reason,
+    createdAt: new Date().toISOString(),
+  });
+  notifySubscribers();
+  return true;
 };
 
 export const deductFromWallet = (customerId: string, amount: number, reason: string) => {
-  deductFromWalletInternal(customerId, amount, reason);
+  if (amount <= 0) return false;
+  const customer = storeState.customers.find((entry) => entry.id === customerId);
+  if (!customer || customer.walletBalance < amount) return false;
+  customer.walletBalance -= amount;
+  createEntityInternal<WalletTransaction>("walletTransaction", {
+    customerId,
+    amount,
+    type: "debit",
+    reason,
+    createdAt: new Date().toISOString(),
+  });
+  notifySubscribers();
+  return true;
 };
 
-export const addToCustomerWallet = (customerId: string, amount: number) => {
-  addToWalletInternal(customerId, amount, "Admin credit");
-};
+export const addToCustomerWallet = (customerId: string, amount: number) => addToWallet(customerId, amount, "Admin credit");
+export const updateOrderStatus = (orderId: string, status: OrderStatus) =>
+  updateEntityInternal<Order>("order", orderId, { status } as Partial<Order>);
 
-export const updateOrderStatus = (orderId: string, status: OrderStatus) => {
-  updateOrderStatusInternal(orderId, status);
-};
-
-export const createEntity = <T extends MenuItem | Slot | Customer | Order | Announcement | WalletTransaction>(
-  type: string,
-  entity: T
-) => {
-  createEntityInternal(type, entity);
-};
-
-export const updateEntity = <T extends MenuItem | Slot | Customer | Order | Announcement | WalletTransaction>(
-  type: string,
-  id: string,
-  updates: Partial<T>
-) => {
-  updateEntityInternal(type, id, updates);
-};
-
-export const deleteEntity = (type: string, id: string) => {
-  deleteEntityInternal(type, id);
-};
+export const createEntity = <T extends object>(type: string, entity: Partial<T> & { id?: string }): T =>
+  createEntityInternal<T>(type, entity);
+export const updateEntity = <T extends object>(type: string, id: string, updates: Partial<T>): T | null =>
+  updateEntityInternal<T>(type, id, updates);
+export const deleteEntity = (type: string, id: string) => deleteEntityInternal(type, id);
 
 export const addToCart = (item: OrderItem) => {
-  addToCartInternal(item);
+  const normalizedQuantity = Number.isFinite(Number(item.quantity)) ? Math.max(1, Number(item.quantity)) : 1;
+  const normalizedPrice = Number.isFinite(Number(item.price)) ? Number(item.price) : 0;
+  const existing = storeState.cart.items.find((entry) => entry.menuItemId === item.menuItemId && entry.slotId === item.slotId);
+  if (existing) {
+    const currentQty = Number.isFinite(Number(existing.quantity)) ? Number(existing.quantity) : 0;
+    existing.quantity = currentQty + normalizedQuantity;
+    if (existing.price == null) {
+      existing.price = normalizedPrice;
+    }
+  } else {
+    storeState.cart.items = [...storeState.cart.items, { ...item, quantity: normalizedQuantity, price: normalizedPrice }];
+  }
+  notifySubscribers();
 };
 
 export const removeFromCart = (menuItemId: string, slotId?: string) => {
-  removeFromCartInternal(menuItemId, slotId);
+  storeState.cart.items = storeState.cart.items.filter(
+    (item) => !(item.menuItemId === menuItemId && item.slotId === slotId),
+  );
+  notifySubscribers();
 };
 
 export const updateCartQuantity = (menuItemId: string, quantity: number, slotId?: string) => {
-  updateCartQuantityInternal(menuItemId, quantity, slotId);
+  storeState.cart.items = storeState.cart.items.map((item) =>
+    item.menuItemId === menuItemId && item.slotId === slotId ? { ...item, quantity: Math.max(1, quantity) } : item,
+  );
+  notifySubscribers();
 };
+
+export const useAllCategories = (): string[] => {
+  const categories = useStore((state) => {
+    const builtIn = ["Veg", "Non-Veg", "Beverages", "Desserts", "Snacks"];
+    const fromItems = state.menuItems.map((item) => item.category).filter(Boolean);
+    return Array.from(new Set([...builtIn, ...state.customCategories, ...fromItems]));
+  }) as string[];
+  return categories;
+};
+
+export const addCustomCategory = (category: string) => {
+  const normalized = category.trim();
+  if (!normalized) return;
+  if (storeState.customCategories.some((entry) => entry.toLowerCase() === normalized.toLowerCase())) return;
+  storeState.customCategories = [...storeState.customCategories, normalized];
+  notifySubscribers();
+};
+

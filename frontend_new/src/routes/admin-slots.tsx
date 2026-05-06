@@ -66,7 +66,9 @@ function AdminSlots() {
         statusColor = "bg-muted text-muted-foreground";
       }
 
-      const pct = s.capacity > 0 ? Math.round((s.currentOccupancy / s.capacity) * 100) : 0;
+      const capacity = Number(s.capacity ?? 0);
+      const occupancy = Number(s.currentOccupancy ?? 0);
+      const pct = capacity > 0 ? Math.round((occupancy / capacity) * 100) : 0;
       const barColor =
         pct >= 80 ? "bg-destructive" : pct >= 50 ? "bg-primary" : pct >= 20 ? "bg-info" : "bg-success";
 
@@ -76,7 +78,7 @@ function AdminSlots() {
         statusColor,
         pct,
         barColor,
-        occ: `${s.currentOccupancy}/${s.capacity}`,
+        occ: `${occupancy}/${capacity}`,
         displayStatus:
           computedStatus === "active" ? "● ACTIVE" : computedStatus === "upcoming" ? "UPCOMING" : "CLOSED",
       };
@@ -101,7 +103,7 @@ function AdminSlots() {
       ? disabledItemIds.filter((id) => id !== itemId)
       : [...disabledItemIds, itemId];
 
-    updateEntity<Slot>("slots", slotId, { disabledItemIds: updatedDisabled });
+    updateEntity<Slot>("slot", slotId, { disabledItemIds: updatedDisabled });
 
     // Update viewItemsSlot if it's the same slot
     if (viewItemsSlot?.id === slotId) {
@@ -281,22 +283,18 @@ function SlotModal({
     }
   }, [slot]);
 
-  const compatibleMealTypes = useMemo<ItemType[]>(
-    () =>
-      mealType === "Breakfast"
-        ? ["Breakfast"]
-        : ["Meal", "Lunch", "Dinner", "Snacks", "Beverages", "Dessert", "Other"],
-    [mealType]
-  );
-
   const liveItemsForMealType = useMemo(
     () =>
       menuItems.filter((item) => {
         if (!item.available) return false;
         const itemType = (item.type ?? "Other") as ItemType;
-        return compatibleMealTypes.includes(itemType);
+        // Keep breakfast strict, but allow all other slot types to pick from full available menu.
+        if (mealType === "Breakfast") {
+          return itemType === "Breakfast";
+        }
+        return true;
       }),
-    [menuItems, compatibleMealTypes]
+    [menuItems, mealType]
   );
 
   const validCategories = useMemo(() => {

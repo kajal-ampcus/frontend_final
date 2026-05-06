@@ -12,6 +12,7 @@ import {
   User,
   Megaphone,
   ShoppingCart,
+  UserPlus2,
 } from "lucide-react";
 
 import { logout, getCurrentUser } from "@/lib/auth";
@@ -34,6 +35,7 @@ const adminNav: BottomNavItem[] = [
   { to: "/admin-orders", label: "Orders", icon: ShoppingBag, color: "bg-gradient-to-br from-sky-400 to-blue-700" },
   { to: "/admin-counter", label: "Counter", icon: ShoppingCart },
   { to: "/admin-guest-orders", label: "Guest Orders", icon: User, color: "bg-gradient-to-br from-emerald-400 to-teal-600" },
+  { to: "/admin-employees", label: "Employees", icon: UserPlus2, color: "bg-gradient-to-br from-cyan-400 to-blue-600" },
   { to: "/admin-slots", label: "Slots", icon: Clock3, color: "bg-gradient-to-br from-cyan-300 to-sky-700" },
   { to: "/admin-menu", label: "Menu", icon: ChefHat, color: "bg-gradient-to-br from-orange-300 to-red-500" },
   { to: "/admin-announcements", label: "Announcement", icon: Megaphone, color: "bg-gradient-to-br from-fuchsia-400 to-pink-600" },

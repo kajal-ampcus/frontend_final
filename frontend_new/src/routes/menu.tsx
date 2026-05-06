@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Check,
   Clock,
   Coffee,
   Leaf,
@@ -50,7 +49,6 @@ function Menu() {
   const [selectedSlot, setSelectedSlot] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [mounted, setMounted] = useState(false);
-  const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
 
   const activeSlot = mealSlots.find((slot) => slot.status === "active") ?? null;
 
@@ -133,29 +131,15 @@ function Menu() {
       .filter((entry): entry is { slot: Slot; items: MenuItem[] } => Boolean(entry && entry.items.length));
   }, [explicitSlotIdsByItemId, mealSlots, menuItems, searchQuery, selectedCategory, selectedSlot, slotById]);
 
-  const addedItemKeys = useMemo(
-    () => new Set(Array.from(addedItems)),
-    [addedItems]
-  );
-
   const handleAddToCart = (item: MenuItem, slotId: string) => {
     addToCart({
       menuItemId: item.id,
       name: item.name,
       price: item.price,
+      quantity: 1,
       image: item.image,
       slotId,
     });
-
-    const addedKey = `${slotId}:${item.id}`;
-    setAddedItems((prev) => new Set(prev).add(addedKey));
-    setTimeout(() => {
-      setAddedItems((prev) => {
-        const next = new Set(prev);
-        next.delete(addedKey);
-        return next;
-      });
-    }, 1500);
 
     toast.success(`Added ${item.name} to cart`, {
       description: formatINR(item.price),
@@ -298,7 +282,6 @@ function Menu() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {items.map((item, index) => {
                   const quantity = getCartItemQty(item.id, slot.id);
-                  const isAdded = addedItemKeys.has(`${slot.id}:${item.id}`);
 
                   return (
                     <div
@@ -369,23 +352,10 @@ function Menu() {
                           ) : (
                             <button
                               onClick={() => handleAddToCart(item, slot.id)}
-                              className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all ${
-                                isAdded
-                                  ? "bg-emerald-600 text-white"
-                                  : "bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/40"
-                              }`}
+                              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:shadow-primary/40"
                             >
-                              {isAdded ? (
-                                <>
-                                  <Check className="h-4 w-4" />
-                                  Added!
-                                </>
-                              ) : (
-                                <>
-                                  <Plus className="h-4 w-4" />
-                                  Add to Cart
-                                </>
-                              )}
+                              <Plus className="h-4 w-4" />
+                              Add to Cart
                             </button>
                           )}
                         </div>

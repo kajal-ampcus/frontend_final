@@ -26,6 +26,7 @@ import { Route as AdminOrdersRouteImport } from './routes/admin-orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin-notifications'
 import { Route as AdminMenuRouteImport } from './routes/admin-menu'
 import { Route as AdminGuestOrdersRouteImport } from './routes/admin-guest-orders'
+import { Route as AdminEmployeesRouteImport } from './routes/admin-employees'
 import { Route as AdminCounterRouteImport } from './routes/admin-counter'
 import { Route as AdminBillingRouteImport } from './routes/admin-billing'
 import { Route as AdminAnnouncementsRouteImport } from './routes/admin-announcements'
@@ -117,6 +118,11 @@ const AdminGuestOrdersRoute = AdminGuestOrdersRouteImport.update({
   path: '/admin-guest-orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminEmployeesRoute = AdminEmployeesRouteImport.update({
+  id: '/admin-employees',
+  path: '/admin-employees',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCounterRoute = AdminCounterRouteImport.update({
   id: '/admin-counter',
   path: '/admin-counter',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/admin-announcements': typeof AdminAnnouncementsRoute
   '/admin-billing': typeof AdminBillingRoute
   '/admin-counter': typeof AdminCounterRoute
+  '/admin-employees': typeof AdminEmployeesRoute
   '/admin-guest-orders': typeof AdminGuestOrdersRoute
   '/admin-menu': typeof AdminMenuRoute
   '/admin-notifications': typeof AdminNotificationsRoute
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/admin-announcements': typeof AdminAnnouncementsRoute
   '/admin-billing': typeof AdminBillingRoute
   '/admin-counter': typeof AdminCounterRoute
+  '/admin-employees': typeof AdminEmployeesRoute
   '/admin-guest-orders': typeof AdminGuestOrdersRoute
   '/admin-menu': typeof AdminMenuRoute
   '/admin-notifications': typeof AdminNotificationsRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/admin-announcements': typeof AdminAnnouncementsRoute
   '/admin-billing': typeof AdminBillingRoute
   '/admin-counter': typeof AdminCounterRoute
+  '/admin-employees': typeof AdminEmployeesRoute
   '/admin-guest-orders': typeof AdminGuestOrdersRoute
   '/admin-menu': typeof AdminMenuRoute
   '/admin-notifications': typeof AdminNotificationsRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/admin-announcements'
     | '/admin-billing'
     | '/admin-counter'
+    | '/admin-employees'
     | '/admin-guest-orders'
     | '/admin-menu'
     | '/admin-notifications'
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/admin-announcements'
     | '/admin-billing'
     | '/admin-counter'
+    | '/admin-employees'
     | '/admin-guest-orders'
     | '/admin-menu'
     | '/admin-notifications'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/admin-announcements'
     | '/admin-billing'
     | '/admin-counter'
+    | '/admin-employees'
     | '/admin-guest-orders'
     | '/admin-menu'
     | '/admin-notifications'
@@ -297,6 +309,7 @@ export interface RootRouteChildren {
   AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
   AdminBillingRoute: typeof AdminBillingRoute
   AdminCounterRoute: typeof AdminCounterRoute
+  AdminEmployeesRoute: typeof AdminEmployeesRoute
   AdminGuestOrdersRoute: typeof AdminGuestOrdersRoute
   AdminMenuRoute: typeof AdminMenuRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
@@ -437,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGuestOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin-employees': {
+      id: '/admin-employees'
+      path: '/admin-employees'
+      fullPath: '/admin-employees'
+      preLoaderRoute: typeof AdminEmployeesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin-counter': {
       id: '/admin-counter'
       path: '/admin-counter'
@@ -481,6 +501,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAnnouncementsRoute: AdminAnnouncementsRoute,
   AdminBillingRoute: AdminBillingRoute,
   AdminCounterRoute: AdminCounterRoute,
+  AdminEmployeesRoute: AdminEmployeesRoute,
   AdminGuestOrdersRoute: AdminGuestOrdersRoute,
   AdminMenuRoute: AdminMenuRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,

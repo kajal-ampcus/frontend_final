@@ -32,9 +32,17 @@ function CartPage() {
   const cartDetails = cart.items.map((item) => {
     const menuItem = menuItems.find((menu) => menu.id === item.menuItemId) ?? null;
     const slot = mealSlots.find((candidate) => candidate.id === item.slotId) ?? null;
+    const quantity = Number.isFinite(Number(item.quantity)) ? Number(item.quantity) : 1;
+    const resolvedPrice = Number.isFinite(Number(item.price))
+      ? Number(item.price)
+      : Number.isFinite(Number(menuItem?.price))
+        ? Number(menuItem?.price)
+        : 0;
 
     return {
       ...item,
+      quantity,
+      price: resolvedPrice,
       menuItem,
       slotId: item.slotId ?? "unslotted",
       slotName: slot?.name ?? "General",
