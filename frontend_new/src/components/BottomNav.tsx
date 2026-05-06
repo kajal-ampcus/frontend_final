@@ -14,6 +14,7 @@ export function BottomNav({ items }: { items: BottomNavItem[] }) {
   const [isHidden, setIsHidden] = useState(false);
   const [showBounce, setShowBounce] = useState(false);
   const [visibleItems, setVisibleItems] = useState<number[]>([]);
+  const shouldStretchDesktop = items.length > 5;
   const lastScrollY = useRef(0);
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -90,10 +91,27 @@ export function BottomNav({ items }: { items: BottomNavItem[] }) {
       {/* Gradient backdrop */}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none" />
 
-      <div className="relative mx-auto max-w-3xl px-2 pb-4 pt-2 sm:px-4 sm:pb-6 sm:pt-3">
+      <div
+        className={`relative mx-auto px-2 pb-4 pt-2 sm:pb-6 sm:pt-3 ${
+          shouldStretchDesktop ? "max-w-6xl" : "max-w-3xl"
+        }`}
+      >
         {/* Glass container */}
-        <div className="rounded-2xl border border-border/50 bg-card/80 p-1.5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-2">
-          <ul className="flex items-center justify-start gap-1 overflow-x-auto px-1 hide-scrollbar sm:justify-around sm:gap-0 sm:overflow-visible sm:px-0">
+        <div
+          className={`rounded-2xl border border-border/50 bg-card/80 p-1.5 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-2 ${
+            shouldStretchDesktop ? "w-full" : "w-full sm:w-fit sm:min-w-[420px]"
+          } ${shouldStretchDesktop ? "" : "sm:mx-auto"}`}
+        >
+          <ul
+            className={`flex items-center justify-start gap-1 overflow-x-auto px-1 hide-scrollbar sm:overflow-visible sm:px-0 ${
+              shouldStretchDesktop
+                ? "sm:grid sm:gap-0"
+                : "sm:flex sm:justify-center sm:gap-4"
+            }`}
+            style={shouldStretchDesktop && items.length > 0
+              ? { gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }
+              : undefined}
+          >
             {items.map((item, index) => {
               const active = location.pathname === item.to;
               const isVisible = visibleItems.includes(index);
@@ -104,7 +122,7 @@ export function BottomNav({ items }: { items: BottomNavItem[] }) {
               return (
                 <li
                   key={item.to}
-                  className="relative shrink-0"
+                  className={`relative shrink-0 ${shouldStretchDesktop ? "sm:min-w-0" : ""}`}
                   style={{
                     transitionDelay: isHidden ? `${waveDelay}ms` : "0ms",
                   }}
@@ -112,7 +130,9 @@ export function BottomNav({ items }: { items: BottomNavItem[] }) {
                   <Link
                     to={item.to}
                     aria-label={item.label}
-                    className={`group relative flex min-w-[68px] flex-col items-center gap-1 rounded-xl px-2 py-2 transition-all duration-300 sm:min-w-0 sm:px-3 ${
+                    className={`group relative flex min-w-[68px] flex-col items-center gap-1 rounded-xl px-2 py-2 transition-all duration-300 ${
+                      shouldStretchDesktop ? "sm:min-w-0 sm:px-1" : "sm:min-w-[104px] sm:px-4"
+                    } ${
                       active ? "bg-primary/10" : "hover:bg-muted/50"
                     }`}
                   >

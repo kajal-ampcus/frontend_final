@@ -349,28 +349,31 @@ function AdminCounter() {
     <AdminLayout crumb="Counter Station">
       <div className="min-h-screen bg-background text-foreground p-6 md:p-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="mx-auto mb-8 flex max-w-5xl items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ef7f1a] text-white">
               <CheckSquare className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-primary">COUNTER STATION</h1>
-              <p className="text-muted-foreground text-sm">{currentDate}</p>
+              <h1 className="text-2xl font-bold tracking-tight text-[#23160d] dark:text-[#fff3e5]">Counter Station</h1>
+              <p className="text-sm text-[#7d6a56] dark:text-[#c8af95]">{currentDate}</p>
             </div>
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
           {/* Order Verification Section */}
-          <div className="bg-card rounded-lg p-8 shadow-2xl border border-border">
+          <div className="rounded-[28px] border border-[#eadfce] bg-[#fffdf9] p-8 dark:border-[#4c3020] dark:bg-[#17100c]">
             <div className="mb-6">
-              <h3 className="text-3xl font-bold mb-4">Scan or Enter Code</h3>
+              <h3 className="mb-2 text-3xl font-bold tracking-tight text-[#23160d] dark:text-[#fff3e5]">Scan or Enter Code</h3>
+              <p className="text-sm text-[#7d6a56] dark:text-[#c8af95]">
+                Verify pickup codes quickly and keep the collection desk flow clean and consistent.
+              </p>
             </div>
 
             <div className="flex gap-4 mb-6">
               <div className="relative flex-1">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8d7a65] dark:text-[#b99d80]">
                   <Search className="h-5 w-5" />
                 </div>
                 <input
@@ -379,20 +382,20 @@ function AdminCounter() {
                   onChange={(e) => setOrderCode(e.target.value.toUpperCase())}
                   onKeyPress={handleKeyPress}
                   placeholder="CMS - XXXXXX"
-                  className="w-full bg-input text-foreground pl-10 pr-4 py-3 rounded-lg font-mono text-lg placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent border border-border"
+                  className="w-full rounded-2xl border border-[#e6d6c3] bg-[#fff8ef] py-3 pl-10 pr-4 font-mono text-lg text-[#23160d] placeholder:text-[#9e8d7a] focus:outline-none focus:ring-2 focus:ring-[#f3b66c]/30 focus:border-[#e18b2c] dark:border-[#533525] dark:bg-[#221712] dark:text-[#fff2e3] dark:placeholder:text-[#9b8167]"
                 />
               </div>
               <button
                 onClick={verifyOrder}
                 disabled={isLoading}
-                className="bg-primary hover:bg-primary/90 disabled:bg-muted text-primary-foreground px-8 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                className="rounded-2xl bg-[#ef7f1a] px-8 py-3 font-semibold text-white transition-colors hover:bg-[#dd7418] disabled:bg-muted disabled:opacity-50"
               >
                 {isLoading ? "VERIFYING..." : "VERIFY"}
               </button>
             </div>
 
             {error && (
-              <div className="mb-4 rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+              <div className="mb-4 rounded-2xl border border-destructive/20 bg-destructive/10 p-3">
                 <p className="text-sm text-destructive flex items-center gap-2">
                   <XCircle className="h-4 w-4" />
                   {error}
@@ -406,7 +409,7 @@ function AdminCounter() {
                 <button
                   key={code}
                   onClick={() => handleQuickFill(code)}
-                  className="bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg font-mono text-sm transition-colors border border-border"
+                  className="rounded-2xl border border-[#e6d6c3] bg-[#fff8ef] px-4 py-2 font-mono text-sm text-[#3a281b] transition-colors hover:bg-[#fff2e2] dark:border-[#4d3223] dark:bg-[#221712] dark:text-[#eedbc8] dark:hover:bg-[#2c1d16]"
                 >
                   {code}
                 </button>
@@ -416,66 +419,66 @@ function AdminCounter() {
 
           {/* Order Details Section */}
           {verifiedOrder && (
-            <div className="bg-card rounded-lg p-8 shadow-2xl border border-border">
+            <div className="rounded-[28px] border border-[#eadfce] bg-[#fffdf9] p-8 dark:border-[#4c3020] dark:bg-[#17100c]">
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-primary">ORDER RECEIPT</h3>
+                  <h3 className="text-xl font-bold text-[#23160d] dark:text-[#fff3e5]">Order Receipt</h3>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-success px-3 py-1 text-sm font-bold text-success-foreground">
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-700">
                       PREPARED
                     </span>
-                    <span className="font-mono text-sm text-muted-foreground">
+                    <span className="font-mono text-sm text-[#8d7a65] dark:text-[#b99d80]">
                       {verifiedOrder.orderNumber}
                     </span>
                   </div>
                 </div>
 
                 {/* Customer Information */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 p-4 bg-muted/50 rounded-lg border border-border">
+                <div className="mb-6 grid grid-cols-1 gap-4 rounded-2xl border border-[#eadfce] bg-[#fff8ef] p-4 dark:border-[#4d3122] dark:bg-[#221712] sm:grid-cols-2">
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-primary" />
+                    <User className="h-4 w-4 text-[#d36f18]" />
                     <div>
-                      <p className="text-xs text-muted-foreground">EMP. NAME</p>
-                      <p className="text-sm font-semibold">{verifiedOrder.customerName}</p>
+                      <p className="text-xs text-[#8d7a65] dark:text-[#b99d80]">EMP. NAME</p>
+                      <p className="text-sm font-semibold dark:text-[#fff3e5]">{verifiedOrder.customerName}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckSquare className="h-4 w-4 text-primary" />
+                    <CheckSquare className="h-4 w-4 text-[#d36f18]" />
                     <div>
-                      <p className="text-xs text-muted-foreground">EMPLOYEE ID</p>
-                      <p className="text-sm font-semibold">FNP-1042</p>
+                      <p className="text-xs text-[#8d7a65] dark:text-[#b99d80]">EMPLOYEE ID</p>
+                      <p className="text-sm font-semibold dark:text-[#fff3e5]">FNP-1042</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-primary" />
+                    <Calendar className="h-4 w-4 text-[#d36f18]" />
                     <div>
-                      <p className="text-xs text-muted-foreground">DEPARTMENT</p>
-                      <p className="text-sm font-semibold">{verifiedOrder.department}</p>
+                      <p className="text-xs text-[#8d7a65] dark:text-[#b99d80]">DEPARTMENT</p>
+                      <p className="text-sm font-semibold dark:text-[#fff3e5]">{verifiedOrder.department}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-primary" />
+                    <Clock className="h-4 w-4 text-[#d36f18]" />
                     <div>
-                      <p className="text-xs text-muted-foreground">SLOT</p>
-                      <p className="text-sm font-semibold">{verifiedOrder.slot}</p>
+                      <p className="text-xs text-[#8d7a65] dark:text-[#b99d80]">SLOT</p>
+                      <p className="text-sm font-semibold dark:text-[#fff3e5]">{(verifiedOrder as any).slot ?? verifiedOrder.slotName ?? "-"}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Order Items */}
                 <div className="space-y-2 mb-6">
-                  <h4 className="text-sm font-semibold text-muted-foreground">ORDER ITEMS</h4>
+                  <h4 className="text-sm font-semibold text-[#8d7a65] dark:text-[#b99d80]">ORDER ITEMS</h4>
                   <div className="space-y-2">
                     {verifiedOrder.items.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border">
+                      <div key={index} className="flex items-center justify-between rounded-2xl border border-[#eadfce] bg-white p-3 dark:border-[#4d3122] dark:bg-[#211611]">
                         <div className="flex items-center gap-3">
-                          <span className="rounded-full bg-primary px-2 py-1 text-xs font-bold text-primary-foreground">
-                            +{item.qty}
+                          <span className="rounded-full bg-[#fff1dd] px-2 py-1 text-xs font-bold text-[#d36f18]">
+                            +{(item as any).qty ?? item.quantity}
                           </span>
-                          <span className="font-medium">{item.name}</span>
+                          <span className="font-medium dark:text-[#fff3e5]">{item.name}</span>
                         </div>
-                        <span className="font-semibold text-primary">
-                          {formatINR(item.price * item.qty)}
+                        <span className="font-semibold text-[#d36f18]">
+                          {formatINR(((item as any).price ?? item.unitPrice ?? 0) * ((item as any).qty ?? item.quantity ?? 0))}
                         </span>
                       </div>
                     ))}
@@ -485,8 +488,8 @@ function AdminCounter() {
                 {/* Total Amount */}
                 <div className="border-t border-border pt-4 mb-6">
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold">TOTAL AMOUNT</span>
-                    <span className="text-2xl font-bold text-primary">
+                    <span className="text-lg font-bold dark:text-[#fff3e5]">TOTAL AMOUNT</span>
+                    <span className="text-2xl font-bold text-[#d36f18]">
                       {formatINR(verifiedOrder.total)}
                     </span>
                   </div>
@@ -496,21 +499,21 @@ function AdminCounter() {
                 <div className="flex gap-3">
                   <button
                     onClick={collectAndPrint}
-                    className="flex-1 flex items-center justify-center gap-2 bg-success hover:bg-success/90 px-6 py-3 font-semibold text-success-foreground rounded-lg transition-colors"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#ef7f1a] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#dd7418]"
                   >
                     <Printer className="h-5 w-5" />
                     Print Receipt
                   </button>
                   <button
                     onClick={() => setShowPreview(true)}
-                    className="bg-secondary hover:bg-secondary/80 px-6 py-3 font-semibold text-secondary-foreground rounded-lg transition-colors border border-border"
+                    className="rounded-2xl border border-[#e6d6c3] bg-[#fff8ef] px-6 py-3 font-semibold text-[#3a281b] transition-colors hover:bg-[#fff2e2] dark:border-[#4d3223] dark:bg-[#221712] dark:text-[#eedbc8] dark:hover:bg-[#2c1d16]"
                   >
                     <Eye className="h-5 w-5 inline mr-2" />
                     Preview
                   </button>
                   <button
                     onClick={cancelOrder}
-                    className="bg-destructive/10 hover:bg-destructive/20 px-6 py-3 font-semibold text-destructive rounded-lg transition-colors border border-destructive/20"
+                    className="rounded-2xl border border-destructive/20 bg-destructive/10 px-6 py-3 font-semibold text-destructive transition-colors hover:bg-destructive/20"
                   >
                     <X className="h-5 w-5 inline mr-2" />
                     Cancel
@@ -521,28 +524,28 @@ function AdminCounter() {
           )}
 
           {/* Recent Collections Section */}
-          <div className="bg-card rounded-lg p-8 shadow-2xl border border-border">
-            <h3 className="text-lg font-bold mb-4 text-primary">
+          <div className="rounded-[28px] border border-[#eadfce] bg-[#fffdf9] p-8 dark:border-[#4c3020] dark:bg-[#17100c]">
+            <h3 className="mb-4 text-lg font-bold text-[#d36f18]">
               RECENT COLLECTIONS ({recentCollections.length})
             </h3>
             <div className="space-y-2">
               {recentCollections.map((collection) => (
-                <div key={collection.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors border border-border">
+                <div key={collection.id} className="flex items-center justify-between rounded-2xl border border-[#eadfce] bg-white p-3 transition-colors hover:bg-[#fffaf4] dark:border-[#4d3122] dark:bg-[#211611] dark:hover:bg-[#281b15]">
                   <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-success"></div>
+                    <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
                     <div>
-                      <p className="font-mono text-sm font-semibold">{collection.orderCode}</p>
-                      <p className="text-xs text-muted-foreground">{collection.customerName}</p>
+                      <p className="font-mono text-sm font-semibold dark:text-[#fff3e5]">{collection.orderCode}</p>
+                      <p className="text-xs text-[#8d7a65] dark:text-[#b99d80]">{collection.customerName}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-primary">{formatINR(collection.amount)}</p>
-                    <p className="text-xs text-muted-foreground">{collection.timestamp}</p>
+                    <p className="font-semibold text-[#d36f18]">{formatINR(collection.amount)}</p>
+                    <p className="text-xs text-[#8d7a65] dark:text-[#b99d80]">{collection.timestamp}</p>
                   </div>
                 </div>
               ))}
               {recentCollections.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="py-8 text-center text-[#8d7a65] dark:text-[#b99d80]">
                   <Receipt className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No recent collections</p>
                 </div>
@@ -554,12 +557,12 @@ function AdminCounter() {
         {/* Preview Modal */}
         {showPreview && verifiedOrder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="mx-4 w-full max-w-md rounded-lg bg-card p-6 shadow-2xl border border-border">
+            <div className="mx-4 w-full max-w-md rounded-[28px] border border-[#eadfce] bg-[#fffdf9] p-6 dark:border-[#4c3020] dark:bg-[#17100c]">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-primary">Receipt Preview</h3>
+                <h3 className="text-lg font-bold text-[#23160d] dark:text-[#fff3e5]">Receipt Preview</h3>
                 <button
                   onClick={() => setShowPreview(false)}
-                  className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
+                  className="rounded-xl p-2 text-[#8d7a65] hover:bg-[#fff2e2] dark:text-[#b99d80] dark:hover:bg-[#2a1c16]"
                 >
                   <X className="h-4 w-4" />
                 </button>

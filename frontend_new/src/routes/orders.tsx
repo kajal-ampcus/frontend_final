@@ -60,7 +60,7 @@ function Orders() {
   const activeOrdersForSlot = useMemo(() => {
     const activeStatuses: OrderStatus[] = ["pending", "accepted", "preparing", "ready"];
     return userOrders.filter(
-      (order) => order.slotId === selectedSlotId && activeStatuses.includes(order.status)
+      (order) => order.slotId === selectedSlotId && activeStatuses.includes(order.status),
     );
   }, [selectedSlotId, userOrders]);
 
@@ -80,8 +80,10 @@ function Orders() {
 
   const filteredOrders = userOrders.filter((order) => {
     if (filter === "all") return true;
-    if (filter === "active") return ["pending", "accepted", "preparing", "ready"].includes(order.status);
-    if (filter === "completed") return ["completed", "delivered", "collected"].includes(order.status);
+    if (filter === "active")
+      return ["pending", "accepted", "preparing", "ready"].includes(order.status);
+    if (filter === "completed")
+      return ["completed", "delivered", "collected"].includes(order.status);
     return order.status === "cancelled";
   });
 
@@ -97,11 +99,15 @@ function Orders() {
 
   return (
     <AppLayout title="Orders">
-      <div className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}>
+      <div
+        className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}
+      >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Your Orders</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Track active orders and review past ones.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Track active orders and review past ones.
+            </p>
           </div>
         </div>
 
@@ -130,7 +136,9 @@ function Orders() {
 
           {activeOrdersForSlot.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-muted/20 py-8 text-center">
-              <p className="text-sm font-medium text-muted-foreground">No active orders for this slot.</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                No active orders for this slot.
+              </p>
             </div>
           ) : (
             <>
@@ -145,7 +153,8 @@ function Orders() {
                 >
                   {activeOrdersForSlot.map((order) => (
                     <option key={order.id} value={order.id}>
-                      {order.orderNumber} - {order.items.map((item) => item.name).join(", ")} - {formatINR(order.total)}
+                      {order.orderNumber} - {order.items.map((item) => item.name).join(", ")} -{" "}
+                      {formatINR(order.total)}
                     </option>
                   ))}
                 </select>
@@ -161,16 +170,22 @@ function Orders() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h2 className="font-bold">Current Order</h2>
-                          <span className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusColor(activeOrder.status)}`}>
-                            {activeOrder.status.toUpperCase()}
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusColor(activeOrder.status)}`}
+                          >
+                            {getDisplayStatusLabel(activeOrder.status).toUpperCase()}
                           </span>
                         </div>
                         <p className="text-sm text-primary">{activeOrder.orderNumber}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">{formatINR(activeOrder.total)}</p>
-                      <p className="text-xs text-muted-foreground">{activeOrder.items.length} items</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {formatINR(activeOrder.total)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {activeOrder.items.length} items
+                      </p>
                     </div>
                   </div>
 
@@ -191,12 +206,16 @@ function Orders() {
                             >
                               <StepIcon className="h-5 w-5" />
                             </div>
-                            <span className={`text-xs font-medium ${step.current ? "font-semibold text-primary" : "text-muted-foreground"}`}>
+                            <span
+                              className={`text-xs font-medium ${step.current ? "font-semibold text-primary" : "text-muted-foreground"}`}
+                            >
                               {step.label}
                             </span>
                           </div>
                           {index < steps.length - 1 && (
-                            <div className={`mx-2 h-1.5 flex-1 rounded-full ${step.done ? "bg-primary" : "bg-muted"}`} />
+                            <div
+                              className={`mx-2 h-1.5 flex-1 rounded-full ${step.done ? "bg-primary" : "bg-muted"}`}
+                            />
                           )}
                         </div>
                       );
@@ -213,7 +232,9 @@ function Orders() {
                             </span>
                             <span className="font-medium">{item.name}</span>
                           </div>
-                          <span className="text-sm text-muted-foreground">{formatINR(item.unitPrice * item.quantity)}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {formatINR(item.unitPrice * item.quantity)}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -259,7 +280,9 @@ function Orders() {
         <div className="rounded-2xl border border-border bg-card shadow-sm">
           <div className="border-b border-border p-5">
             <h3 className="font-bold">Order History</h3>
-            <p className="mt-0.5 text-sm text-muted-foreground">{filteredOrders.length} orders found</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {filteredOrders.length} orders found
+            </p>
           </div>
 
           {filteredOrders.length === 0 ? (
@@ -281,8 +304,13 @@ function Orders() {
             <>
               <div className="divide-y divide-border">
                 {pagedOrders.map((order) => (
-                  <div key={order.id} className="group flex items-center gap-4 p-5 transition-colors hover:bg-muted/50">
-                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${getIconBadgeColor(order.status)}`}>
+                  <div
+                    key={order.id}
+                    className="group flex items-center gap-4 p-5 transition-colors hover:bg-muted/50"
+                  >
+                    <div
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${getIconBadgeColor(order.status)}`}
+                    >
                       {order.status === "cancelled" ? (
                         <XCircle className="h-5 w-5" />
                       ) : ["completed", "delivered", "collected"].includes(order.status) ? (
@@ -295,8 +323,10 @@ function Orders() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold">{order.orderNumber}</p>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getStatusColor(order.status)}`}>
-                          {order.status.toUpperCase()}
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getStatusColor(order.status)}`}
+                        >
+                          {getDisplayStatusLabel(order.status).toUpperCase()}
                         </span>
                       </div>
                       <p className="mt-1 truncate text-sm text-muted-foreground">
@@ -355,14 +385,18 @@ function canCancel(status: OrderStatus) {
 
 function getStatusSteps(status: OrderStatus) {
   const steps = [
-    { key: "pending", label: "Placed", icon: Receipt },
-    { key: "accepted", label: "Accepted", icon: Check },
+    { key: "placed", label: "Placed", icon: Receipt },
     { key: "preparing", label: "Preparing", icon: UtensilsCrossed },
-    { key: "ready", label: "Ready", icon: Package },
-    { key: "collected", label: "Collected", icon: ShoppingBag },
+    { key: "ready", label: "Ready to Pick", icon: Package },
+    { key: "delivered", label: "Delivered", icon: ShoppingBag },
   ];
 
-  const normalizedStatus = status === "delivered" || status === "completed" ? "collected" : status;
+  const normalizedStatus =
+    status === "pending" || status === "accepted"
+      ? "placed"
+      : status === "delivered" || status === "completed" || status === "collected"
+        ? "delivered"
+        : status;
   const currentIndex = steps.findIndex((step) => step.key === normalizedStatus);
 
   return steps.map((step, index) => ({
@@ -375,9 +409,8 @@ function getStatusSteps(status: OrderStatus) {
 function getStatusColor(status: OrderStatus) {
   switch (status) {
     case "pending":
-      return "bg-amber-500/15 text-amber-600";
     case "accepted":
-      return "bg-sky-500/15 text-sky-600";
+      return "bg-amber-500/15 text-amber-600";
     case "preparing":
       return "bg-primary/15 text-primary";
     case "ready":
@@ -395,6 +428,26 @@ function getStatusColor(status: OrderStatus) {
 
 function getIconBadgeColor(status: OrderStatus) {
   return getStatusColor(status);
+}
+
+function getDisplayStatusLabel(status: OrderStatus) {
+  switch (status) {
+    case "pending":
+    case "accepted":
+      return "Placed";
+    case "preparing":
+      return "Preparing";
+    case "ready":
+      return "Ready to Pick";
+    case "delivered":
+    case "completed":
+    case "collected":
+      return "Delivered";
+    case "cancelled":
+      return "Cancelled";
+    default:
+      return status;
+  }
 }
 
 function formatOrderDate(dateString: string) {

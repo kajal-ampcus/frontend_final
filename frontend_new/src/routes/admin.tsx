@@ -5,7 +5,6 @@ import {
   Sunrise, UtensilsCrossed, Cookie, Moon, Flame,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { IgniteDonutChartCard } from "@/components/charts/IgniteDashboardCharts";
 import { AdminLayout } from "./admin-orders";
 import { useEntities, formatINR, type OrderStatus, type Order } from "@/lib/store";
 
@@ -50,14 +49,6 @@ const SLOT_META: Record<string, { icon: LucideIcon; accent: string; bg: string }
   Dinner:    { icon: Moon,               accent: "text-primary",          bg: "bg-muted" },
 };
 
-/* ─── Status badge colors ─── */
-const STATUS_COLOR: Record<string, { dot: string; text: string; bg: string }> = {
-  Pending:   { dot: "bg-amber-400",   text: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-500/10" },
-  Preparing: { dot: "bg-blue-500",    text: "text-blue-600 dark:text-blue-400",     bg: "bg-blue-500/10" },
-  Ready:     { dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10" },
-  Delivered: { dot: "bg-purple-500",  text: "text-purple-600 dark:text-purple-400",  bg: "bg-purple-500/10" },
-};
-
 function Admin() {
   const orders = useEntities<Order>("orders");
   const { gridRef, handlePointerMove, handlePointerLeave } = useBentoGlow();
@@ -99,7 +90,7 @@ function Admin() {
     { status: "Preparing", count: liveByStatus.preparing },
     { status: "Ready", count: liveByStatus.ready },
     { status: "Delivered", count: liveByStatus.delivered },
-  ].filter((item) => item.count > 0);
+  ];
 
   const activeStatusCount = liveStatusData.reduce((sum, item) => sum + item.count, 0);
   const peakSlot = slotCounts.reduce((max, s) => (s.orders > max.orders ? s : max), slotCounts[0]);
@@ -195,7 +186,10 @@ function Admin() {
           </div>
 
           {/* ── Card 4: Status Distribution (2×2) — "Efficiency" position ── */}
-          <div className="bento-card bento-span-2x2" style={{ minHeight: 320 }}>
+          <div
+            className="bento-card bento-span-2x2 border-[#efcfad] bg-[#fff8ef] shadow-[0_18px_40px_rgba(245,128,32,0.08)] dark:border-[#4a2b16] dark:bg-[#20120d] dark:shadow-none"
+            style={{ minHeight: 320 }}
+          >
             <div className="relative z-10 flex h-full flex-col">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -207,52 +201,25 @@ function Admin() {
                     Status Distribution
                   </h2>
                 </div>
-                <div className="rounded-xl border border-border bg-primary/5 px-4 py-2.5 text-right">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <div className="rounded-xl border border-[#ead8c8] bg-[#fff3e8] px-4 py-2.5 text-right dark:border-[#4e301d] dark:bg-[#2a1912]">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-[#8d715b] dark:text-[#c7aa91]">
                     Active Orders
                   </div>
-                  <div className="mt-0.5 text-2xl font-black text-primary">
+                  <div className="mt-0.5 text-2xl font-black text-[#f57c14] dark:text-primary">
                     {activeStatusCount}
                   </div>
                 </div>
               </div>
 
               <div className="mt-3 flex-1">
-                {liveStatusData.length === 0 ? (
+                {activeStatusCount === 0 ? (
                   <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-border py-12 text-center">
                     <Package className="h-10 w-10 text-muted-foreground/40" />
                     <p className="mt-2 text-sm text-muted-foreground">No active orders right now</p>
                   </div>
                 ) : (
                   <>
-                    <IgniteDonutChartCard
-                      data={liveStatusData}
-                      valueMemberPath="count"
-                      labelMemberPath="status"
-                      height="200px"
-                      brushes={["#f59e0b", "#3b82f6", "#10b981", "#8b5cf6"]}
-                    />
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {liveStatusData.map((s) => {
-                        const c = STATUS_COLOR[s.status] ?? STATUS_COLOR.Pending;
-                        return (
-                          <div
-                            key={s.status}
-                            className={`flex items-center gap-2.5 rounded-xl ${c.bg} px-3 py-2.5`}
-                          >
-                            <span className={`h-2 w-2 rounded-full ${c.dot}`} />
-                            <div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                                {s.status}
-                              </div>
-                              <div className={`text-lg font-black leading-tight ${c.text}`}>
-                                {s.count}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <StatusStickChart data={liveStatusData} />
                   </>
                 )}
               </div>
@@ -281,6 +248,69 @@ function Admin() {
 }
 
 /* ─── Reusable Stat Card (1×1 bento cell) ─── */
+function StatusStickChart({
+  data,
+}: {
+  data: Array<{ status: string; count: number }>;
+}) {
+  const maxCount = Math.max(...data.map((item) => item.count), 1);
+
+  return (
+    <div className="relative overflow-hidden rounded-[28px] border border-[#e6ccb5] bg-[#f7eadf] px-5 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_18px_40px_rgba(160,103,54,0.10)] dark:border-[#5c3827] dark:bg-[#2a1812] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_18px_40px_rgba(0,0,0,0.32)]">
+      <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div
+          className="absolute inset-0 dark:hidden"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(140,88,46,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(140,88,46,0.07) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
+        <div
+          className="absolute inset-0 hidden dark:block"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
+        <div className="absolute -right-10 top-0 h-28 w-28 rounded-full bg-[#ffb36a]/18 blur-2xl dark:bg-[#ff9b54]/12" />
+        <div className="absolute left-1/2 top-8 h-24 w-24 -translate-x-1/2 rounded-full bg-[#ff8d8d]/10 blur-3xl dark:bg-[#ff5e8a]/10" />
+      </div>
+
+      <div className="relative z-10 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4 sm:gap-5">
+        {data.map((item) => {
+          const height = item.count === 0 ? 0 : Math.max(28, Math.round((item.count / maxCount) * 138));
+          return (
+            <div key={item.status} className="flex flex-col items-center text-center">
+              <div className="mb-4 min-h-[36px] rounded-full bg-[#ead7c5]/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.26em] text-[#6f5039] dark:bg-[#4a2d20]/90 dark:text-[#f5d8c1]">
+                {item.status}
+              </div>
+              <div className="relative flex h-[156px] items-end justify-center">
+                <div className="absolute bottom-0 top-0 w-3 rounded-full bg-[#d8c0ad] dark:bg-[#65473b]" />
+                <div
+                  className="relative z-10 w-3 rounded-full shadow-[0_0_18px_rgba(255,136,92,0.45)]"
+                  style={{
+                    height: `${height}px`,
+                    background: "linear-gradient(180deg, #ffd17f 0%, #ffa26a 35%, #ff6d7a 70%, #e6538f 100%)",
+                  }}
+                />
+                <div className="absolute bottom-0 w-8 border-b border-[#bb9a81]/45 dark:border-[#9f7764]/25" />
+              </div>
+              <div className="mt-4 text-2xl font-black tracking-tight text-[#2e1a11] dark:text-[#fff3e7]">
+                {item.count}
+              </div>
+              <div className="mt-1 text-[11px] font-medium text-[#866850] dark:text-[#cfb29e]">
+                live orders
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function StatCard({
   icon: Icon,
   label,

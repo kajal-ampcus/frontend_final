@@ -6,12 +6,12 @@ import {
   Clock3,
   ReceiptText,
   Flame,
+  CheckSquare,
   Search,
   LogOut,
   ShoppingBag,
   User,
   Megaphone,
-  ShoppingCart,
   UserPlus2,
 } from "lucide-react";
 
@@ -33,7 +33,7 @@ export const Route = createFileRoute("/admin-orders")({ component: AdminOrders }
 const adminNav: BottomNavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutGrid, color: "bg-gradient-to-br from-violet-400 to-indigo-600" },
   { to: "/admin-orders", label: "Orders", icon: ShoppingBag, color: "bg-gradient-to-br from-sky-400 to-blue-700" },
-  { to: "/admin-counter", label: "Counter", icon: ShoppingCart },
+  { to: "/admin-counter", label: "Counter", icon: CheckSquare, color: "bg-gradient-to-br from-orange-400 to-amber-600" },
   { to: "/admin-guest-orders", label: "Guest Orders", icon: User, color: "bg-gradient-to-br from-emerald-400 to-teal-600" },
   { to: "/admin-employees", label: "Employees", icon: UserPlus2, color: "bg-gradient-to-br from-cyan-400 to-blue-600" },
   { to: "/admin-slots", label: "Slots", icon: Clock3, color: "bg-gradient-to-br from-cyan-300 to-sky-700" },

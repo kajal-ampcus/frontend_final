@@ -83,8 +83,8 @@ function AdminAnnouncements() {
 
   const availableDishes = useMemo(
     () =>
-      [...new Set(menu.filter((item) => item.available).map((item) => item.name))].sort((left, right) =>
-        left.localeCompare(right),
+      [...new Set(menu.filter((item) => item.available).map((item) => item.name))].sort(
+        (left, right) => left.localeCompare(right),
       ),
     [menu],
   );
@@ -246,7 +246,7 @@ function AdminAnnouncements() {
         </div>
         <button
           onClick={openCreateDialog}
-          className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-gradient-to-r from-amber-100 via-white to-orange-100 px-5 py-2.5 text-sm font-semibold text-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-gradient-to-r from-amber-100 via-white to-orange-100 px-5 py-2.5 text-sm font-semibold text-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-[#4f3222] dark:from-[#2b1b13] dark:via-[#1d1511] dark:to-[#332116] dark:text-[#fff1df]"
         >
           <Plus className="h-4 w-4" />
           New Announcement
@@ -300,15 +300,15 @@ function AdminAnnouncements() {
             {announcements.filter((announcement) => announcement.active).length} active
           </Badge>
         }
-        actions={
-          <button
-            onClick={openCreateDialog}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            Add New
-          </button>
-        }
+        // actions={
+        //   <button
+        //     onClick={openCreateDialog}
+        //     className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+        //   >
+        //     <Plus className="h-4 w-4" />
+        //     Add New
+        //   </button>
+        // }
       >
         {filteredAnnouncements.length === 0 ? (
           <div className="px-5 py-16 text-center">
@@ -400,25 +400,29 @@ function AdminAnnouncements() {
       </TablePanel>
 
       <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
-        <DialogContent className="max-w-3xl overflow-hidden rounded-[28px] border-0 bg-transparent p-0 shadow-none">
-          <div className="relative overflow-hidden rounded-[28px] border border-orange-100 bg-white shadow-2xl">
-            <div className="absolute inset-x-0 top-0 h-36 bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.32),_transparent_42%),radial-gradient(circle_at_top_right,_rgba(249,115,22,0.2),_transparent_40%),linear-gradient(135deg,_rgba(255,247,237,1),_rgba(255,255,255,0.92))]" />
-            <div className="relative p-6 sm:p-7">
-              <DialogHeader className="mb-6 text-left">
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-orange-200">
-                  <Sparkles className="h-5 w-5" />
+        <DialogContent
+          disableAnimation
+          className="max-w-2xl overflow-hidden rounded-[22px] border border-[#eadfce] bg-white p-0 shadow-[0_22px_60px_-26px_rgba(38,24,12,0.35)] dark:border-[#4d3122] dark:bg-[#17110d]"
+        >
+          <div className="bg-white dark:bg-[#17110d]">
+            <div className="border-b border-[#efe3d4] px-5 py-4 dark:border-[#3f2a1f] sm:px-6">
+              <DialogHeader className="text-left">
+                <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#fff1dd] text-[#d97706] dark:bg-[#382216] dark:text-[#ffb467]">
+                  <Sparkles className="h-4 w-4" />
                 </div>
-                <DialogTitle className="text-2xl font-bold text-slate-900">
+                <DialogTitle className="text-[1.7rem] font-bold leading-tight text-slate-900 dark:text-[#fff3e5]">
                   {editing ? "Edit Announcement" : "Create New Announcement"}
                 </DialogTitle>
-                <DialogDescription className="max-w-2xl text-sm text-slate-600">
-                  Write a clear update for employees, choose the active time range, and decide whether it
-                  should go live right away.
+                <DialogDescription className="max-w-xl text-sm leading-5 text-slate-600 dark:text-[#c9af95]">
+                  Write a clear update for employees, choose the active time range, and decide
+                  whether it should go live right away.
                 </DialogDescription>
               </DialogHeader>
+            </div>
 
-              <div className="grid gap-5">
-                <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="p-4 sm:p-5">
+              <div className="grid gap-3.5">
+                <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
                   <Field
                     label="Title"
                     error={errors.title}
@@ -437,10 +441,10 @@ function AdminAnnouncements() {
                       type="button"
                       onClick={() => updateFormField("active", !form.active)}
                       className={cn(
-                        "flex h-11 items-center justify-between rounded-2xl border px-4 text-sm font-medium transition",
+                        "flex h-9 items-center justify-between rounded-xl border px-4 text-sm font-medium",
                         form.active
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : "border-slate-200 bg-slate-50 text-slate-700",
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                          : "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-300",
                       )}
                     >
                       <span>{form.active ? "Live on dashboards" : "Saved as inactive"}</span>
@@ -448,8 +452,8 @@ function AdminAnnouncements() {
                         className={cn(
                           "rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]",
                           form.active
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-slate-200 text-slate-600",
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
+                            : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
                         )}
                       >
                         {form.active ? "Active" : "Inactive"}
@@ -466,16 +470,16 @@ function AdminAnnouncements() {
                   <Textarea
                     value={form.message}
                     onChange={(event) => updateFormField("message", event.target.value)}
-                    rows={5}
+                    rows={3}
                     placeholder="Refreshment will be served in the lunch slot with a special dish."
                     className={cn(
-                      "resize-none rounded-2xl px-4 py-3",
+                      "resize-none rounded-xl px-4 py-3",
                       inputClassName(errors.message),
                     )}
                   />
                 </Field>
 
-                <div className="grid gap-5 md:grid-cols-4">
+                <div className="grid gap-3 md:grid-cols-4">
                   <Field label="Date" error={errors.date}>
                     <Input
                       type="date"
@@ -510,7 +514,7 @@ function AdminAnnouncements() {
                         updateFormField("specialDish", value === "__none__" ? "" : value)
                       }
                     >
-                      <SelectTrigger className="h-11 rounded-2xl px-4">
+                      <SelectTrigger className="h-9 rounded-xl px-4">
                         <SelectValue placeholder="Choose special dish" />
                       </SelectTrigger>
                       <SelectContent>
@@ -525,37 +529,37 @@ function AdminAnnouncements() {
                   </Field>
                 </div>
 
-                <div className="rounded-3xl border border-orange-100 bg-gradient-to-r from-orange-50 via-amber-50 to-white p-4">
-                  <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-600">
+                <div className="rounded-2xl border border-[#efe3d4] bg-[#fffaf4] p-3.5 dark:border-[#433024] dark:bg-[#221712]">
+                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c26c18]">
                     Preview
                   </div>
-                  <div className="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-sm">
+                  <div className="rounded-xl border border-[#efe3d4] bg-white p-3.5 dark:border-[#433024] dark:bg-[#18110d]">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-base font-semibold text-slate-900">
+                      <span className="text-[15px] font-semibold text-slate-900">
                         {form.title.trim() || "Announcement title"}
                       </span>
                       <Badge
                         className={cn(
                           "rounded-full border-0 shadow-none",
                           form.active
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-slate-200 text-slate-700",
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300"
+                            : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
                         )}
                       >
                         {form.active ? "Active" : "Inactive"}
                       </Badge>
                     </div>
-                    <p className="mt-2 text-sm text-slate-600">
+                    <p className="mt-1.5 text-sm text-slate-600 dark:text-[#c9af95]">
                       {form.message.trim() || "Your announcement message preview will appear here."}
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-slate-500">
-                      <span className="rounded-full bg-slate-100 px-3 py-1">
+                    <div className="mt-2.5 flex flex-wrap gap-2 text-xs font-medium text-slate-500 dark:text-[#b7997d]">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 dark:bg-[#2a1c16]">
                         {form.date ? formatAnnouncementDate(form.date) : "No date"}
                       </span>
-                      <span className="rounded-full bg-slate-100 px-3 py-1">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 dark:bg-[#2a1c16]">
                         {form.fromTime} — {form.toTime}
                       </span>
-                      <span className="rounded-full bg-slate-100 px-3 py-1">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 dark:bg-[#2a1c16]">
                         {form.specialDish || "No special dish"}
                       </span>
                     </div>
@@ -563,18 +567,18 @@ function AdminAnnouncements() {
                 </div>
               </div>
 
-              <DialogFooter className="mt-7 gap-3 sm:justify-between sm:space-x-0">
+              <DialogFooter className="mt-5 gap-3 border-t border-[#efe3d4] pt-4 dark:border-[#3f2a1f] sm:justify-between sm:space-x-0">
                 <button
                   type="button"
                   onClick={() => handleDialogChange(false)}
-                  className="rounded-2xl border border-border px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted"
+                  className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:translate-y-[-1px] hover:shadow-xl"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ef7f1a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#dd7418]"
                 >
                   <Sparkles className="h-4 w-4" />
                   {editing ? "Update Announcement" : "Create Announcement"}
@@ -602,7 +606,7 @@ function AnnouncementStat({
   accent: string;
 }) {
   return (
-    <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+    <div className="rounded-3xl border border-border bg-card p-5 shadow-sm dark:border-[#37231a] dark:bg-[#16100d]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground">{label}</p>
@@ -631,10 +635,10 @@ function Field({
   return (
     <label className="block">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-[#b7997d]">
           {label}
         </span>
-        {hint ? <span className="text-xs text-slate-400">{hint}</span> : null}
+        {hint ? <span className="text-xs text-slate-400 dark:text-[#8f755e]">{hint}</span> : null}
       </div>
       {children}
       {error ? <p className="mt-2 text-xs font-medium text-red-500">{error}</p> : null}
@@ -644,7 +648,7 @@ function Field({
 
 function inputClassName(error?: string) {
   return cn(
-    "h-11 rounded-2xl border-slate-200 px-4 shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-orange-200",
+    "h-10 rounded-xl border-slate-200 px-4 shadow-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-orange-200 dark:border-[#4f3529] dark:bg-[#201511] dark:text-[#fff3e5] dark:placeholder:text-[#9d8268]",
     error ? "border-red-400 ring-1 ring-red-200 focus-visible:ring-red-200" : "",
   );
 }
