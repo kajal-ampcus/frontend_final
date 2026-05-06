@@ -11,7 +11,8 @@ import {
 import { Pagination } from "@/components/Pagination";
 import { TablePanel } from "@/components/TablePanel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { addToCustomerWallet, downloadCSV, formatINR, type Customer, type Order, useStore } from "@/lib/store";
+import { addToCustomerWallet, createEntity, downloadCSV, formatINR, type Customer, type Order, useStore } from "@/lib/store";
+import { findStoredEmployeeById } from "@/lib/auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin-billing")({ component: AdminBilling });
@@ -584,7 +585,6 @@ function Stat({ label, value, icon: Icon, color }: { label: string; value: strin
   );
 }
 function RaiseFundModal({ customers, onClose }: { customers: Customer[]; onClose: () => void }) {
-  const walletBalances = useStore((s) => s.walletBalances);
   const [empIdQuery, setEmpIdQuery] = useState("");
   const [foundCustomer, setFoundCustomer] = useState<Customer | null>(null);
   const [amount, setAmount] = useState("");
@@ -595,9 +595,23 @@ function RaiseFundModal({ customers, onClose }: { customers: Customer[]; onClose
       toast.error("Enter an employee ID");
       return;
     }
-    const match = customers.find(
-      (c) => c.empId.toLowerCase() === empIdQuery.trim().toLowerCase()
-    );
+    const normalized = empIdQuery.trim().toLowerCase();
+    let match = customers.find((c) => c.empId?.toLowerCase() === normalized);
+
+    if (!match) {
+      const storedEmployee = findStoredEmployeeById(empIdQuery.trim());
+      if (storedEmployee) {
+        match = createEntity<Customer>("customer", {
+          empId: storedEmployee.employeeId,
+          name: storedEmployee.fullName,
+          department: storedEmployee.department,
+          email: storedEmployee.email,
+          phone: storedEmployee.phone,
+          walletBalance: 0,
+        });
+      }
+    }
+
     setFoundCustomer(match ?? null);
     setSearched(true);
   };
@@ -617,9 +631,7 @@ function RaiseFundModal({ customers, onClose }: { customers: Customer[]; onClose
     setSearched(false);
   };
 
-  const currentBalance = foundCustomer
-    ? (walletBalances[foundCustomer.id] ?? 0)
-    : 0;
+  const currentBalance = foundCustomer ? foundCustomer.walletBalance ?? 0 : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4">

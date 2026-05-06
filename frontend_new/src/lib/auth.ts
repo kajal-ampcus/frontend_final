@@ -12,6 +12,42 @@ export interface User {
   department?: string;
 }
 
+export interface StoredEmployee {
+  id: string;
+  employeeId: string;
+  fullName: string;
+  department: string;
+  designation: string;
+  email: string;
+  phone: string;
+  joiningDate: string;
+  gender: string;
+  address: string;
+  createdAt: string;
+  pin?: string;
+}
+
+export const EMPLOYEE_STORAGE_KEY = "admin-employees-v1";
+
+export const getStoredEmployees = (): StoredEmployee[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(EMPLOYEE_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as StoredEmployee[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+export const findStoredEmployeeById = (employeeId: string): StoredEmployee | undefined => {
+  if (!employeeId) return undefined;
+  return getStoredEmployees().find(
+    (employee) => employee.employeeId.toLowerCase() === employeeId.trim().toLowerCase(),
+  );
+};
+
 /**
  * Mock users for demo purposes
  */
@@ -35,16 +71,35 @@ export async function login(role: Role, id: string, pin: string): Promise<User> 
     (u) => u.role === role && u.id.toLowerCase() === id.toLowerCase() && u.pin === pin
   );
 
-  if (!user) {
-    throw new Error("Invalid credentials");
+  if (user) {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
+    }
+    return user;
   }
 
-  // Store session in localStorage
-  if (typeof window !== "undefined") {
-    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
+  if (role === "employee") {
+    const storedEmployee = findStoredEmployeeById(id);
+    if (storedEmployee) {
+      if (storedEmployee.pin && storedEmployee.pin !== pin) {
+        throw new Error("Invalid credentials");
+      }
+
+      const employeeUser: User = {
+        id: storedEmployee.employeeId,
+        name: storedEmployee.fullName,
+        pin: storedEmployee.pin ?? pin,
+        role: "employee",
+        department: storedEmployee.department,
+      };
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(employeeUser));
+      }
+      return employeeUser;
+    }
   }
 
-  return user;
+  throw new Error("Invalid credentials");
 }
 
 /**

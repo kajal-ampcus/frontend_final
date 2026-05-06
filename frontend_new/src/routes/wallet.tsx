@@ -143,13 +143,13 @@ function WalletPage() {
               </div>
               <p className="mt-2 text-4xl font-bold">{formatINR(currentCustomer?.walletBalance ?? 0)}</p>
               <div className="mt-6 flex gap-3">
-                <button
+                {/* <button
                   onClick={() => setShowAddFunds(true)}
                   className="flex items-center gap-2 rounded-xl bg-white/20 px-5 py-2.5 text-sm font-semibold backdrop-blur-sm transition-all hover:bg-white/30"
                 >
                   <Plus className="h-4 w-4" />
                   Add Funds
-                </button>
+                </button> */}
               </div>
             </div>
           </div>

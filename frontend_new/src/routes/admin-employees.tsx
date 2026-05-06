@@ -9,10 +9,11 @@ import { Pagination } from "@/components/Pagination";
 import { TablePanel } from "@/components/TablePanel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { downloadCSV } from "@/lib/store";
+import { EMPLOYEE_STORAGE_KEY } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin-employees")({ component: AdminEmployees });
 
-const STORAGE_KEY = "admin-employees-v1";
+const STORAGE_KEY = EMPLOYEE_STORAGE_KEY;
 const PAGE_SIZE = 10;
 
 type Employee = {
@@ -50,23 +51,31 @@ function AdminEmployees() {
   const [page, setPage] = useState(1);
   const [form, setForm] = useState<EmployeeInput>(EMPTY_INPUT);
   const [uploading, setUploading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
+      if (!raw) {
+        setLoaded(true);
+        return;
+      }
       const parsed = JSON.parse(raw) as Employee[];
-      if (Array.isArray(parsed)) setEmployees(parsed);
+      if (Array.isArray(parsed)) {
+        setEmployees(parsed);
+      }
     } catch {
       toast.error("Failed to load employee records");
+    } finally {
+      setLoaded(true);
     }
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !loaded) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(employees));
-  }, [employees]);
+  }, [employees, loaded]);
 
   const departmentOptions = useMemo(
     () => ["All", ...new Set(employees.map((employee) => employee.department).filter(Boolean))],
