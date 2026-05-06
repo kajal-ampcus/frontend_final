@@ -104,7 +104,7 @@ function Menu() {
     const grouped = new Map<string, { slot: Slot; items: MenuItem[] }>();
 
     menuItems.forEach((item) => {
-      if (!item.live) return;
+      if (!item.available) return;
       if (selectedCategory !== "All" && item.category !== selectedCategory) return;
       if (normalizedQuery && !item.name.toLowerCase().includes(normalizedQuery)) return;
 

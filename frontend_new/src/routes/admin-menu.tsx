@@ -13,6 +13,8 @@ import {
   type ItemCategory,
   type ItemType,
   type MenuItem,
+  useAllCategories,
+  addCustomCategory,
 } from "@/lib/store";
 import { toast } from "sonner";
 
@@ -117,63 +119,63 @@ function AdminMenu() {
           const avatarText = itemName.slice(0, 2).toUpperCase();
 
           return (
-          <div
-            key={String(it.id ?? `${itemName}-${idx}`)}
-            className={`flex items-center gap-3 p-3 sm:gap-4 sm:p-4 ${idx !== visible.length - 1 ? "border-b border-border/60" : ""}`}
-          >
-            {it.image ? (
-              <img
-                src={it.image}
-                alt={it.name}
-                className="h-14 w-14 flex-shrink-0 rounded-md object-cover sm:h-16 sm:w-16"
-              />
-            ) : (
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-muted-foreground sm:h-16 sm:w-16">
-                {avatarText}
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="truncate font-semibold">{itemName}</div>
-                {it.tag && (
-                  <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold text-primary">
-                    {it.tag}
+            <div
+              key={String(it.id ?? `${itemName}-${idx}`)}
+              className={`flex items-center gap-3 p-3 sm:gap-4 sm:p-4 ${idx !== visible.length - 1 ? "border-b border-border/60" : ""}`}
+            >
+              {it.image ? (
+                <img
+                  src={it.image}
+                  alt={it.name}
+                  className="h-14 w-14 flex-shrink-0 rounded-md object-cover sm:h-16 sm:w-16"
+                />
+              ) : (
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-muted-foreground sm:h-16 sm:w-16">
+                  {avatarText}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="truncate font-semibold">{itemName}</div>
+                  {it.tag && (
+                    <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold text-primary">
+                      {it.tag}
+                    </span>
+                  )}
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground">
+                    {itemType}
                   </span>
-                )}
-                <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground">
-                  {itemType}
-                </span>
+                </div>
+                <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
+                  {it.description}
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] tracking-widest text-muted-foreground">
+                  <span>{itemCategory}</span>
+                  <span>·</span>
+                  <span>{itemSlot}</span>
+                  <span>·</span>
+                  <span>{itemDays.length === 7 ? "ALL DAYS" : itemDays.join(", ")}</span>
+                </div>
               </div>
-              <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">
-                {it.description}
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] tracking-widest text-muted-foreground">
-                <span>{itemCategory}</span>
-                <span>·</span>
-                <span>{itemSlot}</span>
-                <span>·</span>
-                <span>{itemDays.length === 7 ? "ALL DAYS" : itemDays.join(", ")}</span>
+              <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+                <div className="text-right font-bold text-primary">{formatINR(it.price)}</div>
+                <button
+                  onClick={() => openEdit(it)}
+                  className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Edit"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => remove(it)}
+                  className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  aria-label="Delete"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
             </div>
-            <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
-              <div className="text-right font-bold text-primary">{formatINR(it.price)}</div>
-              <button
-                onClick={() => openEdit(it)}
-                className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Edit"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </button>
-              <button
-                onClick={() => remove(it)}
-                className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                aria-label="Delete"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        );
+          );
         })}
 
         {paginatedItems.length === 0 && (
@@ -215,11 +217,10 @@ function AdminMenu() {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`rounded-md px-3 py-1 text-xs ${
-                        currentPage === pageNum
+                      className={`rounded-md px-3 py-1 text-xs ${currentPage === pageNum
                           ? "bg-primary text-primary-foreground"
                           : "border border-border hover:bg-muted"
-                      }`}
+                        }`}
                     >
                       {pageNum}
                     </button>
@@ -251,7 +252,7 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
   const [quantity, setQuantity] = useState<string>(
     initial?.quantity != null ? String(initial.quantity) : "",
   );
-  const [category, setCategory] = useState<ItemCategory>(initial?.category ?? "Veg");
+  const [category, setCategory] = useState<string>(initial?.category ?? "Veg");
   const [type, setType] = useState<ItemType>(initial?.type ?? "Meal");
   const [slot, setSlot] = useState<string>(initial?.slot ?? "Lunch");
   const [days, setDays] = useState<Day[]>(initial?.days ?? [...ALL_DAYS]);
@@ -288,7 +289,7 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
       description: description.trim(),
       price: priceNum,
       quantity: quantityNum,
-      category,
+      category: category as ItemCategory,
       type,
       slot,
       days,
@@ -358,15 +359,7 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
           </Field>
 
           <Field label="Category *">
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as ItemCategory)}
-              className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none"
-            >
-              <option>Veg</option>
-              <option>Non-Veg</option>
-              <option>Beverages</option>
-            </select>
+            <CategorySelect value={category} onChange={setCategory} />
           </Field>
 
           <Field label="Item Type *">
@@ -497,6 +490,85 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function CategorySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const categories = useAllCategories();
+  const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(value);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+        setInputValue(value);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [value]);
+
+  const isTyping = isOpen && inputValue !== value;
+  const filtered = isTyping
+    ? categories.filter((c) => c.toLowerCase().includes(inputValue.toLowerCase()))
+    : categories;
+  const exactMatch = categories.some((c) => c.toLowerCase() === inputValue.trim().toLowerCase());
+  const showAdd = inputValue.trim().length > 0 && !exactMatch;
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <input
+        className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none transition-colors focus:ring-1 focus:ring-primary"
+        value={inputValue}
+        onChange={(e) => {
+          setInputValue(e.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        placeholder="Search or add category..."
+      />
+      
+      {isOpen && (
+        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-card p-1 shadow-md">
+          {filtered.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+              onClick={() => {
+                onChange(c);
+                setIsOpen(false);
+              }}
+            >
+              {c}
+            </button>
+          ))}
+          {showAdd && (
+            <button
+              type="button"
+              className="w-full rounded-sm px-2 py-1.5 text-left text-sm text-primary hover:bg-muted"
+              onClick={() => {
+                const newCat = inputValue.trim();
+                addCustomCategory(newCat);
+                onChange(newCat);
+                setIsOpen(false);
+              }}
+            >
+              + Add new category "{inputValue.trim()}"
+            </button>
+          )}
+          {filtered.length === 0 && !showAdd && (
+            <div className="px-2 py-1.5 text-sm text-muted-foreground">No categories found.</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

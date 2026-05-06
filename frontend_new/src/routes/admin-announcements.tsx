@@ -48,22 +48,23 @@ type AnnouncementForm = {
   title: string;
   message: string;
   date: string;
-  slot: string;
+  fromTime: string;
+  toTime: string;
   specialDish: string;
   active: boolean;
 };
 
 type AnnouncementErrors = Partial<Record<keyof AnnouncementForm, string>>;
-type AdminAnnouncement = Announcement & { slot: string };
+type AdminAnnouncement = Announcement;
 
-const SLOT_OPTIONS = ["Breakfast", "Lunch", "Snacks", "Dinner"] as const;
 const PAGE_SIZE = 6;
 
 const createDefaultForm = (): AnnouncementForm => ({
   title: "",
   message: "",
   date: new Date().toISOString().slice(0, 10),
-  slot: "Lunch",
+  fromTime: "07:00",
+  toTime: "09:00",
   specialDish: "",
   active: true,
 });
@@ -76,14 +77,13 @@ function AdminAnnouncements() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [slotFilter, setSlotFilter] = useState<"all" | (typeof SLOT_OPTIONS)[number]>("all");
   const [page, setPage] = useState(1);
   const [form, setForm] = useState<AnnouncementForm>(createDefaultForm);
   const [errors, setErrors] = useState<AnnouncementErrors>({});
 
   const availableDishes = useMemo(
     () =>
-      [...new Set(menu.filter((item) => item.live).map((item) => item.name))].sort((left, right) =>
+      [...new Set(menu.filter((item) => item.available).map((item) => item.name))].sort((left, right) =>
         left.localeCompare(right),
       ),
     [menu],
@@ -99,28 +99,28 @@ function AdminAnnouncements() {
           announcement.title.toLowerCase().includes(normalizedQuery) ||
           announcement.message.toLowerCase().includes(normalizedQuery) ||
           announcement.date.includes(normalizedQuery) ||
-          announcement.slot.toLowerCase().includes(normalizedQuery) ||
+          announcement.fromTime.includes(normalizedQuery) ||
+          announcement.toTime.includes(normalizedQuery) ||
           (announcement.specialDish ?? "").toLowerCase().includes(normalizedQuery);
         const matchesStatus =
           statusFilter === "all" ||
           (statusFilter === "active" ? announcement.active : !announcement.active);
-        const matchesSlot = slotFilter === "all" || announcement.slot === slotFilter;
 
-        return matchesQuery && matchesStatus && matchesSlot;
+        return matchesQuery && matchesStatus;
       })
       .sort((first, second) => {
         const dateCompare = second.date.localeCompare(first.date);
         if (dateCompare !== 0) return dateCompare;
         return new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime();
       });
-  }, [announcements, query, slotFilter, statusFilter]);
+  }, [announcements, query, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredAnnouncements.length / PAGE_SIZE));
   const pagedAnnouncements = filteredAnnouncements.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
-  }, [query, slotFilter, statusFilter]);
+  }, [query, statusFilter]);
 
   useEffect(() => {
     if (page > totalPages) {
@@ -142,7 +142,8 @@ function AdminAnnouncements() {
       title: announcement.title,
       message: announcement.message,
       date: announcement.date,
-      slot: announcement.slot,
+      fromTime: announcement.fromTime,
+      toTime: announcement.toTime,
       specialDish: announcement.specialDish ?? "",
       active: announcement.active,
     });
@@ -187,7 +188,8 @@ function AdminAnnouncements() {
       nextErrors.message = "Message should stay under 280 characters.";
 
     if (!values.date) nextErrors.date = "Date is required.";
-    if (!values.slot) nextErrors.slot = "Please select a slot.";
+    if (!values.fromTime) nextErrors.fromTime = "From time is required.";
+    if (!values.toTime) nextErrors.toTime = "To time is required.";
 
     return nextErrors;
   };
@@ -204,7 +206,8 @@ function AdminAnnouncements() {
       title: form.title.trim(),
       message: form.message.trim(),
       date: form.date,
-      slot: form.slot,
+      fromTime: form.fromTime,
+      toTime: form.toTime,
       specialDish: form.specialDish,
       active: form.active,
       priority: "normal" as const,
@@ -286,29 +289,6 @@ function AdminAnnouncements() {
           ]}
           activeOption={statusFilter}
           onOptionChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}
-          extraFilters={
-            <div className="flex min-w-[180px] items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Select
-                value={slotFilter}
-                onValueChange={(value) =>
-                  setSlotFilter(value as "all" | (typeof SLOT_OPTIONS)[number])
-                }
-              >
-                <SelectTrigger className="h-auto border-0 px-0 py-0 shadow-none focus:ring-0">
-                  <SelectValue placeholder="Filter by slot" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All slots</SelectItem>
-                  {SLOT_OPTIONS.map((slot) => (
-                    <SelectItem key={slot} value={slot}>
-                      {slot}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          }
         />
       </div>
 
@@ -347,7 +327,7 @@ function AdminAnnouncements() {
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Slot</TableHead>
+                  <TableHead>Time Range</TableHead>
                   <TableHead>Special Dish</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Message</TableHead>
@@ -365,7 +345,7 @@ function AdminAnnouncements() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="rounded-full px-3 py-1">
-                        {announcement.slot}
+                        {announcement.fromTime} — {announcement.toTime}
                       </Badge>
                     </TableCell>
                     <TableCell>{announcement.specialDish || "None"}</TableCell>
@@ -432,7 +412,7 @@ function AdminAnnouncements() {
                   {editing ? "Edit Announcement" : "Create New Announcement"}
                 </DialogTitle>
                 <DialogDescription className="max-w-2xl text-sm text-slate-600">
-                  Write a clear update for employees, choose the meal slot, and decide whether it
+                  Write a clear update for employees, choose the active time range, and decide whether it
                   should go live right away.
                 </DialogDescription>
               </DialogHeader>
@@ -495,7 +475,7 @@ function AdminAnnouncements() {
                   />
                 </Field>
 
-                <div className="grid gap-5 md:grid-cols-3">
+                <div className="grid gap-5 md:grid-cols-4">
                   <Field label="Date" error={errors.date}>
                     <Input
                       type="date"
@@ -505,27 +485,22 @@ function AdminAnnouncements() {
                     />
                   </Field>
 
-                  <Field label="Slot" error={errors.slot}>
-                    <Select
-                      value={form.slot}
-                      onValueChange={(value) => updateFormField("slot", value)}
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          "h-11 rounded-2xl px-4",
-                          errors.slot ? "border-red-400 ring-1 ring-red-200" : "",
-                        )}
-                      >
-                        <SelectValue placeholder="Select meal slot" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SLOT_OPTIONS.map((slot) => (
-                          <SelectItem key={slot} value={slot}>
-                            {slot}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <Field label="From" error={errors.fromTime}>
+                    <Input
+                      type="time"
+                      value={form.fromTime}
+                      onChange={(event) => updateFormField("fromTime", event.target.value)}
+                      className={inputClassName(errors.fromTime)}
+                    />
+                  </Field>
+
+                  <Field label="To" error={errors.toTime}>
+                    <Input
+                      type="time"
+                      value={form.toTime}
+                      onChange={(event) => updateFormField("toTime", event.target.value)}
+                      className={inputClassName(errors.toTime)}
+                    />
                   </Field>
 
                   <Field label="Special dish">
@@ -578,7 +553,7 @@ function AdminAnnouncements() {
                         {form.date ? formatAnnouncementDate(form.date) : "No date"}
                       </span>
                       <span className="rounded-full bg-slate-100 px-3 py-1">
-                        {form.slot || "No slot"}
+                        {form.fromTime} — {form.toTime}
                       </span>
                       <span className="rounded-full bg-slate-100 px-3 py-1">
                         {form.specialDish || "No special dish"}

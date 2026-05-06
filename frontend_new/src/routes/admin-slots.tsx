@@ -28,8 +28,8 @@ const CATEGORIES_BY_TYPE: Partial<Record<ItemType, ItemCategory[]>> = {
 };
 
 function AdminSlots() {
-  const slots = useEntities<Slot>("slots");
-  const menuItems = useEntities<MenuItem>("menuItems");
+  const slots = useEntities<Slot>("slot");
+  const menuItems = useEntities<MenuItem>("menuItem");
   const [showAdd, setShowAdd] = useState(false);
   const [viewItemsSlot, setViewItemsSlot] = useState<Slot | null>(null);
   const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
@@ -111,17 +111,17 @@ function AdminSlots() {
 
   const handleDeleteSlot = (slotId: string, slotName: string) => {
     if (confirm(`Are you sure you want to delete the "${slotName}" slot?`)) {
-      deleteEntity("slots", slotId);
+      deleteEntity("slot", slotId);
     }
   };
 
   const handleSaveSlot = (data: Partial<Slot>) => {
     if (editingSlot) {
       // Update existing slot
-      updateEntity<Slot>("slots", editingSlot.id, data);
+      updateEntity<Slot>("slot", editingSlot.id, data);
     } else {
       // Create new slot
-      createEntity<Slot>("slots", {
+      createEntity<Slot>("slot", {
         name: data.name ?? "New Slot",
         label: data.label ?? "NEW SESSION",
         date: data.date ?? new Date().toISOString().slice(0, 10),
@@ -136,7 +136,7 @@ function AdminSlots() {
         status: "upcoming",
         menuItemIds: data.menuItemIds ?? [],
         disabledItemIds: [],
-      });
+      } as any);
     }
     setShowAdd(false);
     setEditingSlot(null);
@@ -247,7 +247,9 @@ function SlotModal({
   const [end, setEnd] = useState(slot?.endTime ?? "09:00");
   const [active, setActive] = useState(slot?.active ?? true);
   const [mealType, setMealType] = useState<ItemType>(slot?.type ?? "Meal");
-  const [category, setCategory] = useState<ItemCategory>(slot?.defaultCategory ?? "Veg");
+  const [selectedCategories, setSelectedCategories] = useState<ItemCategory[]>(
+    slot?.defaultCategory ? [slot.defaultCategory as ItemCategory] : ["Veg"]
+  );
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>(slot?.menuItemIds ?? []);
   const [slotName, setSlotName] = useState(slot?.name ?? "");
   const [label, setLabel] = useState(slot?.label ?? "NEW SESSION");
@@ -260,7 +262,7 @@ function SlotModal({
       setEnd(slot.endTime ?? "09:00");
       setActive(slot.active ?? true);
       setMealType(slot.type ?? "Meal");
-      setCategory(slot.defaultCategory ?? "Veg");
+      setSelectedCategories(slot.defaultCategory ? [slot.defaultCategory as ItemCategory] : ["Veg"]);
       setSelectedItemIds(slot.menuItemIds ?? []);
       setSlotName(slot.name);
       setLabel(slot.label ?? "NEW SESSION");
@@ -271,7 +273,7 @@ function SlotModal({
       setEnd("09:00");
       setActive(true);
       setMealType("Meal");
-      setCategory("Veg");
+      setSelectedCategories(["Veg"]);
       setSelectedItemIds([]);
       setSlotName("");
       setLabel("NEW SESSION");
@@ -290,7 +292,7 @@ function SlotModal({
   const liveItemsForMealType = useMemo(
     () =>
       menuItems.filter((item) => {
-        if (!item.live) return false;
+        if (!item.available) return false;
         const itemType = (item.type ?? "Other") as ItemType;
         return compatibleMealTypes.includes(itemType);
       }),
@@ -315,14 +317,14 @@ function SlotModal({
   }, [mealType, liveItemsForMealType]);
 
   useEffect(() => {
-    if (!validCategories.includes(category)) {
-      setCategory(validCategories[0]);
+    if (selectedCategories.length === 0 && validCategories.length > 0) {
+      setSelectedCategories([validCategories[0]]);
     }
-  }, [mealType, category, validCategories]);
+  }, [mealType, validCategories, selectedCategories]);
 
   const filteredItems = useMemo(
-    () => liveItemsForMealType.filter((item) => item.category === category),
-    [liveItemsForMealType, category]
+    () => liveItemsForMealType.filter((item) => selectedCategories.includes(item.category)),
+    [liveItemsForMealType, selectedCategories]
   );
 
   const handleSave = () => {
@@ -335,7 +337,7 @@ function SlotModal({
       displayTime: `${start} — ${end}`,
       active,
       type: mealType,
-      defaultCategory: category,
+      defaultCategory: selectedCategories[0] || "Veg",
       menuItemIds: selectedItemIds,
       capacity,
     });
@@ -381,7 +383,6 @@ function SlotModal({
             <div>
               <Label>Date</Label>
               <div className="relative">
-                <Calendar className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="date"
                   value={date}
@@ -411,11 +412,8 @@ function SlotModal({
                   type="time"
                   value={start}
                   onChange={(e) => setStart(e.target.value)}
-                  className="w-full rounded-md border border-border bg-input/40 px-3 py-2 pr-10 text-sm outline-none"
+                  className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none"
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                </span>
               </label>
             </div>
             <div>
@@ -426,11 +424,8 @@ function SlotModal({
                   type="time"
                   value={end}
                   onChange={(e) => setEnd(e.target.value)}
-                  className="w-full rounded-md border border-border bg-input/40 px-3 py-2 pr-10 text-sm outline-none"
+                  className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none"
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                </span>
               </label>
             </div>
           </div>
@@ -445,7 +440,11 @@ function SlotModal({
                     name="mealType"
                     value={t}
                     checked={mealType === t}
-                    onChange={() => { setMealType(t); setSelectedItemIds([]); }}
+                    onChange={() => { 
+                      setMealType(t); 
+                      setSelectedItemIds([]); 
+                      setSelectedCategories(["Veg"]);
+                    }}
                     className="accent-primary"
                   />
                   <span className="font-semibold">{t}</span>
@@ -455,17 +454,33 @@ function SlotModal({
           </div>
 
           <div>
-            <Label>Category</Label>
-            <select
-              value={category}
-              onChange={(e) => { setCategory(e.target.value as ItemCategory); setSelectedItemIds([]); }}
-              className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none"
-            >
-              {validCategories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <div className="mt-1 text-[10px] text-muted-foreground">Categories adjust based on meal type.</div>
+            <Label>Categories</Label>
+            <div className="flex flex-wrap gap-2 rounded-md border border-border bg-input/20 p-2">
+              {validCategories.map((c) => {
+                const isSelected = selectedCategories.includes(c);
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategories((prev) =>
+                        prev.includes(c)
+                          ? prev.length > 1 ? prev.filter((cat) => cat !== c) : prev
+                          : [...prev, c]
+                      );
+                    }}
+                    className={`rounded-full px-3 py-1 text-[10px] font-semibold transition ${
+                      isSelected
+                        ? "bg-primary text-white shadow-sm"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-1 text-[10px] text-muted-foreground">Select one or more categories.</div>
           </div>
 
           <div>
@@ -579,7 +594,7 @@ function SlotItemsModal({
                     type="button"
                     onClick={() => onToggleItem(slot.id, item.id)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-                      isDisabled ? "bg-rose-500" : "bg-emerald-500"
+                      isDisabled ? "bg-border" : "bg-orange-500"
                     }`}
                   >
                     <span

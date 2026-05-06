@@ -215,7 +215,7 @@ function Dashboard() {
                   <p className="mt-2 text-sm text-muted-foreground">{announcement.message}</p>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-foreground">
                     <span className="rounded-full bg-muted px-3 py-1">
-                      Slot: {mealSlots.find((slot) => slot.id === announcement.slotId)?.name ?? "All Day"}
+                      {announcement.fromTime} — {announcement.toTime}
                     </span>
                     {announcement.specialDish && (
                       <span className="rounded-full bg-muted px-3 py-1">
