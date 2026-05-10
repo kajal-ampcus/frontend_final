@@ -1,0 +1,86 @@
+import uuid
+from django.db import models
+from django.core.validators import MinValueValidator
+
+
+class GuestOrder(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('preparing', 'Preparing'),
+        ('prepared', 'Prepared'),
+        ('collected', 'Collected'),
+        ('ready', 'Ready'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, db_column='id')
+    canteen = models.ForeignKey(
+        'cms.CanteenLocation',
+        on_delete=models.PROTECT,
+        db_column='canteen_id',
+        related_name='guest_orders',
+        null=True,
+        blank=True
+    )
+    order_number = models.CharField(max_length=50, unique=True, null=True, blank=True, db_column='order_number')
+    guest_name = models.CharField(max_length=200, db_column='guest_name')
+    guest_email = models.CharField(max_length=254, blank=True, default='', db_column='guest_email')
+    phone = models.CharField(max_length=20, db_column='guest_mobile')
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)], db_column='total_amount')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_column='status')
+    created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
+    updated_at = models.DateTimeField(auto_now=True, db_column='updated_at')
+    estimated_time = models.TimeField(null=True, blank=True, db_column='estimated_time')
+    special_instructions = models.TextField(blank=True, db_column='special_instructions')
+
+    class Meta:
+        db_table = 'cms_guest_orders'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Order {self.order_number} - {self.guest_name}"
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            latest_order = GuestOrder.objects.order_by('-order_number').first()
+            if latest_order and latest_order.order_number.startswith('GUEST-'):
+                try:
+                    num = int(latest_order.order_number.split('-')[-1])
+                except (ValueError, IndexError):
+                    num = 0
+            else:
+                num = 0
+            self.order_number = f"GUEST-{num + 1:03d}"
+        super().save(*args, **kwargs)
+
+
+class GuestOrderItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, db_column='id')
+    order = models.ForeignKey(
+        GuestOrder,
+        on_delete=models.CASCADE,
+        related_name='items',
+        db_column='order_id',
+        to_field='id'
+    )
+    name = models.CharField(max_length=200, db_column='item_name')
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], db_column='unit_price')
+    qty = models.PositiveIntegerField(validators=[MinValueValidator(1)], db_column='quantity')
+    is_custom = models.BooleanField(default=False, db_column='is_custom')
+    description = models.TextField(
+        blank=True,
+        default='',
+        db_column='item_description'
+    )
+
+    class Meta:
+        db_table = 'cms_guest_order_items'
+
+    def __str__(self):
+        return f"{self.qty}x {self.name}"
+
+    @property
+    def subtotal(self):
+        return self.price * self.qty
